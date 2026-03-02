@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grandma Mode</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="header">
+    <span class="logo">🧓</span>
+    <div>
+      <div class="title">Grandma Mode</div>
+      <div class="subtitle">Your gentle guide on the internet</div>
+    </div>
+    <div class="status-dot" id="statusDot"></div>
+  </div>
+
+  <div class="grandma-box">
+    <div class="avatar" id="avatar">🧓</div>
+    <div class="speech" id="speech">
+      Hello dear! I'm here to help you understand this page. What would you like to know?
+    </div>
+  </div>
+
+  <div class="scam-warning hidden" id="scamWarning">
+    <span>⚠️</span>
+    <div id="scamText"></div>
+    <button id="dismissScam">✕</button>
+  </div>
+
+  <div class="action-log" id="actionLog">
+    <div class="log-title">WHAT I'M DOING</div>
+    <div id="logItems">
+      <div class="log-item info">Ready to help you!</div>
+    </div>
+  </div>
+
+  <div class="quick-buttons">
+    <button class="quick-btn" id="explainBtn">📖 Explain page</button>
+    <button class="quick-btn" id="scanBtn">🛡️ Check scams</button>
+  </div>
+
+  <div class="suggestions hidden" id="suggestions">
+    <div class="suggestions-title">YOU MIGHT WANT TO...</div>
+    <div id="suggestionItems"></div>
+  </div>
+
+  <div class="chat-area">
+    <textarea 
+      id="chatInput" 
+      placeholder="Type what you need help with..." 
+      rows="2"
+    ></textarea>
+    <button id="sendBtn">➤</button>
+  </div>
+
+  <div class="voice-area">
+    <button class="voice-btn" id="voiceBtn">🎙️</button>
+    <div class="voice-hint">Tap and tell me what you need</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
