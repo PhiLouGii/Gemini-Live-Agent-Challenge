@@ -137,3 +137,28 @@ Speak directly to the user as if you are their helpful grandchild.`
 
   return result.response.candidates![0].content.parts[0].text!;
 }
+
+export async function getSuggestions(base64Image: string): Promise<string[]> {
+  const result = await model.generateContent({
+    contents: [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: 'image/png', data: base64Image } },
+        {
+          text: `You are Grandma Mode helping an elderly user browse the internet.
+
+Look at this webpage and suggest 2-3 simple follow-up actions the user might want to do next.
+
+Respond ONLY with a JSON array of short, friendly action strings. Example:
+["Search for a cheaper option", "Read more about this topic", "Go back to the previous page"]
+
+Keep each suggestion under 8 words. Return ONLY the JSON array.`
+        }
+      ]
+    }]
+  });
+
+  const text = result.response.candidates![0].content.parts[0].text!;
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(cleaned);
+}

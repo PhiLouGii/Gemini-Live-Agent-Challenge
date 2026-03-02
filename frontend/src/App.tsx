@@ -20,6 +20,7 @@ export default function App() {
   const [scamWarning, setScamWarning] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const [listening, setListening] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
   const [url, setUrl] = useState('https://www.google.com/travel/flights');
   const [started, setStarted] = useState(false);
   const recognitionRef = useRef<any>(null);
@@ -52,6 +53,7 @@ export default function App() {
       case 'done':
         setIsRunning(false);
         setLogs(prev => [...prev, { type: 'success', text: 'Task complete!' }]);
+        generateSuggestions();
         break;
       case 'error':
         setIsRunning(false);
@@ -127,6 +129,21 @@ export default function App() {
       speak("This page looks safe to me, dear! I don't see anything suspicious.");
     }
   }
+
+  async function generateSuggestions() {
+  try {
+    const screenshot = await getScreenshot();
+    const res = await axios.post(`${API}/api/suggestions`, { screenshot });
+    setSuggestions(res.data.suggestions);
+  } catch {
+    // silently fail
+  }
+}
+
+async function getScreenshot() {
+  const res = await axios.post(`${API}/api/screenshot`);
+  return res.data.screenshot;
+}
 
   // Voice input
   function handleVoice() {
@@ -244,11 +261,10 @@ export default function App() {
               </button>
             ) : (
               <>
-                {['📖 Explain this page', '🛡️ Check for scams', '⬅️ Go back'].map(cmd => (
+                {['📖 Explain this page', '🛡️ Check for scams'].map(cmd => (
                   <button key={cmd} onClick={() => {
                     if (cmd.includes('Explain')) handleSimplify();
                     else if (cmd.includes('scam')) handleScan();
-                    else runTask(cmd);
                   }} style={{
                     background: 'white',
                     border: '2px solid #c9a87a',
@@ -265,6 +281,16 @@ export default function App() {
               </>
             )}
           </div>
+
+          {/* Chat input + suggestions */}
+          {started && (
+            <ChatInput
+              onSend={runTask}
+              isRunning={isRunning}
+              suggestions={suggestions}
+              onSuggestion={(s) => runTask(s)}
+            />
+          )}
 
           <VoiceButton
             listening={listening}

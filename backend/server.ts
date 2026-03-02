@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { initBrowser, getScreenshot, navigateTo, closeBrowser } from './src/screenshot';
-import { getNextAction, detectScam, simplifyPage } from './src/gemini';
+import { getNextAction, detectScam, simplifyPage, getSuggestions } from './src/gemini';
 import { executeAction } from './src/actions';
 
 dotenv.config({ path: '../.env' });
@@ -142,6 +142,27 @@ app.post('/api/navigate', async (req, res) => {
     await navigateTo(url);
     const screenshot = await getScreenshot();
     res.json({ success: true, screenshot });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Get current screenshot ────────────────────────────────────────
+app.post('/api/screenshot', async (req, res) => {
+  try {
+    const screenshot = await getScreenshot();
+    res.json({ screenshot });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Generate follow-up suggestions ───────────────────────────────
+app.post('/api/suggestions', async (req, res) => {
+  try {
+    const screenshot = await getScreenshot();
+    const result = await getSuggestions(screenshot);
+    res.json({ suggestions: result });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
