@@ -62,14 +62,27 @@ export default function App() {
 
   // Text to speech
   function speak(text: string) {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.rate = 0.85;
-    utterance.pitch = 1.1;
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-  }
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.85;
+  utterance.pitch = 1.1;
+  
+  // Pick a warm female voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v =>
+    v.name.includes('Samantha') ||
+    v.name.includes('Karen') ||
+    v.name.includes('Moira') ||
+    v.name.includes('Female') ||
+    v.name.toLowerCase().includes('female') ||
+    (v.lang === 'en-US' && v.name.includes('Google') && !v.name.includes('Male'))
+  );
+  if (preferred) utterance.voice = preferred;
+
+  utterance.onstart = () => setSpeaking(true);
+  utterance.onend = () => setSpeaking(false);
+  window.speechSynthesis.speak(utterance);
+}
 
   // Start backend browser
   async function handleStart() {
