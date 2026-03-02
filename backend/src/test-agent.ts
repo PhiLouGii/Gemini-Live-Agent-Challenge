@@ -6,7 +6,7 @@ async function test() {
   
   await runAgent(
     'Search for flights from Nairobi to Paris',
-    'https://www.google.com'
+    'https://www.google.com/travel/flights'
   );
 
   // Keep browser open for 5 seconds so we can see the result

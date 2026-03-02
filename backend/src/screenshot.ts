@@ -4,11 +4,16 @@ let browser: Browser | null = null;
 let page: Page | null = null;
 
 export async function initBrowser(): Promise<void> {
-  browser = await chromium.launch({ headless: false }); // false so we can see it
-  const context = await browser.newContext();
+  browser = await chromium.launch({ headless: false });
+  const context = await browser.newContext({
+    locale: 'en-US',
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9'
+    }
+  });
   page = await context.newPage();
   await page.goto('https://www.google.com');
-  console.log('🌐 Browser launched!');
+  console.log(' Browser launched!');
 }
 
 export async function getScreenshot(): Promise<string> {

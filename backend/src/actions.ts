@@ -16,28 +16,31 @@ export async function executeAction(action: Action): Promise<string> {
 
     case 'click':
       try {
-        // Try to find by text first
-        await page.getByText(action.target!, { exact: false }).first().click();
+        await page.getByText(action.target!, { exact: false }).first().click({ timeout: 5000 });
         return `Clicked on "${action.target}"`;
       } catch {
-        // Fall back to placeholder/label
         try {
-          await page.getByPlaceholder(action.target!).first().click();
+          await page.locator(`[aria-label*="${action.target}"]`).first().click({ timeout: 5000 });
           return `Clicked on "${action.target}"`;
         } catch {
-          // Fall back to role
-          await page.locator(`text=${action.target}`).first().click();
-          return `Clicked on "${action.target}"`;
+          await page.keyboard.press('Enter');
+          return `Pressed Enter (fallback for "${action.target}")`;
         }
       }
 
     case 'type':
       try {
-        await page.getByPlaceholder(action.target!, { exact: false }).first().fill(action.value!);
-        return `Typed "${action.value}" into "${action.target}"`;
+        // Try focused element first
+        await page.keyboard.type(action.value!, { delay: 50 });
+        return `Typed "${action.value}"`;
       } catch {
-        await page.locator(`text=${action.target}`).first().fill(action.value!);
-        return `Typed "${action.value}" into "${action.target}"`;
+        try {
+          await page.getByRole('searchbox').fill(action.value!);
+          return `Typed "${action.value}" into searchbox`;
+        } catch {
+          await page.getByRole('textbox').first().fill(action.value!);
+          return `Typed "${action.value}" into textbox`;
+        }
       }
 
     case 'scroll':
