@@ -6,6 +6,7 @@ import BrowserPanel from './components/BrowserPanel';
 import ActionLog from './components/ActionLog';
 import VoiceButton from './components/VoiceButton';
 import ScamWarning from './components/ScamWarning';
+import ChatInput from './components/ChatInput';
 
 const API = 'http://localhost:3001';
 const WS = 'ws://localhost:3001';
@@ -21,7 +22,7 @@ export default function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [listening, setListening] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
-  const [url, setUrl] = useState('https://www.google.com/travel/flights');
+  const [url, setUrl] = useState('https://www.google.com');
   const [started, setStarted] = useState(false);
   const recognitionRef = useRef<any>(null);
 
