@@ -168,6 +168,86 @@ app.post('/api/suggestions', async (req, res) => {
   }
 });
 
+// Extension endpoints (screenshot comes FROM the extension)
+app.post('/api/task-extension', async (req, res) => {
+  const { request, screenshot } = req.body;
+  if (!request || !screenshot) return res.status(400).json({ error: 'Missing fields' });
+
+  res.json({ success: true });
+
+  (async () => {
+    try {
+      const previousActions: string[] = [];
+      let isDone = false;
+      let steps = 0;
+
+      sendToClient('status', { message: `Starting: ${request}` });
+
+      while (!isDone && steps < 10) {
+        steps++;
+
+        const scamCheck = await detectScam(screenshot);
+        if (scamCheck.isScam) {
+          sendToClient('scam', { warning: scamCheck.warning });
+          break;
+        }
+
+        const { action, narration, isDone: done } = await getNextAction(
+          screenshot, request, previousActions
+        );
+
+        sendToClient('narration', { text: narration });
+        sendToClient('action', { action });
+
+        if (done || action.action === 'done') {
+          isDone = true;
+          sendToClient('done', { success: true });
+          break;
+        }
+
+        previousActions.push(`Step ${steps}: ${action.action} ${action.target || ''}`);
+        sendToClient('log', { text: `${action.action} ${action.target || ''}` });
+
+        await new Promise(r => setTimeout(r, 1500));
+      }
+
+      if (!isDone) sendToClient('done', { success: true });
+    } catch (err: any) {
+      sendToClient('error', { message: err.message });
+    }
+  })();
+});
+
+app.post('/api/simplify-extension', async (req, res) => {
+  try {
+    const { screenshot } = req.body;
+    const explanation = await simplifyPage(screenshot);
+    res.json({ explanation });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/scan-extension', async (req, res) => {
+  try {
+    const { screenshot } = req.body;
+    const result = await detectScam(screenshot);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/suggestions-extension', async (req, res) => {
+  try {
+    const { screenshot } = req.body;
+    const result = await getSuggestions(screenshot);
+    res.json({ suggestions: result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Start server ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
