@@ -248,6 +248,17 @@ app.post('/api/suggestions-extension', async (req, res) => {
   }
 });
 
+// Next action for extension goal tasks
+app.post('/api/next-action', async (req, res) => {
+  try {
+    const { request, screenshot, previousActions } = req.body;
+    const result = await getNextAction(screenshot, request, previousActions || []);
+    res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Start server ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
 server.listen(PORT, () => {
