@@ -212,3 +212,104 @@ body {
 .voice-hint { font-size: 0.78rem; color: #999; }
 
 .hidden { display: none !important; }
+
+.task-button-area {
+  margin: 0 12px 10px;
+}
+
+.task-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #7c4f2f, #a0622a);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  box-shadow: 0 4px 14px rgba(124,79,47,0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.task-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(123, 79, 47, 0.45);
+}
+
+.task-btn:disabled {
+  background: #ccc;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+
+.task-dialog {
+  margin: 0 12px 10px;
+  background: white;
+  border: 2px solid #c9a87a;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.task-dialog-title {
+  font-size: 0.9rem;
+  color: #5a3820;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.task-dialog textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1.5px solid #c9a87a;
+  font-size: 0.88rem;
+  font-family: Georgia, serif;
+  resize: none;
+  outline: none;
+  margin-bottom: 10px;
+}
+.task-dialog-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.task-cancel-btn {
+  padding: 7px 16px;
+  background: white;
+  border: 2px solid #c9a87a;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  color: #7c4f2f;
+  font-size: 0.88rem;
+}
+.task-confirm-btn {
+  padding: 7px 16px;
+  background: #7c4f2f;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  color: white;
+  font-size: 0.88rem;
+}
+
+.confirm-dialog {
+  margin: 0 12px 10px;
+  background: #fff8f0;
+  border: 2px solid #e67e22;
+  border-radius: 12px;
+  padding: 14px;
+}
+.confirm-title {
+  font-size: 0.85rem;
+  color: #e67e22;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+.confirm-action {
+  font-size: 0.9rem;
+  color: #333;
+  margin-bottom: 10px;
+  font-style: italic;
+}

@@ -14,6 +14,15 @@ const voiceBtn = document.getElementById('voiceBtn');
 const explainBtn = document.getElementById('explainBtn');
 const scanBtn = document.getElementById('scanBtn');
 const statusDot = document.getElementById('statusDot');
+const taskBtn = document.getElementById('taskBtn');
+const taskDialog = document.getElementById('taskDialog');
+const taskGoalInput = document.getElementById('taskGoalInput');
+const taskCancelBtn = document.getElementById('taskCancelBtn');
+const taskConfirmBtn = document.getElementById('taskConfirmBtn');
+const confirmDialog = document.getElementById('confirmDialog');
+const confirmActionText = document.getElementById('confirmActionText');
+const confirmYesBtn = document.getElementById('confirmYesBtn');
+const confirmNoBtn = document.getElementById('confirmNoBtn');
 
 let isRunning = false;
 let ws = null;
@@ -169,6 +178,98 @@ async function loadSuggestions() {
   }
 }
 
+// Confirm before executing a critical action
+function confirmAction(actionDescription) {
+  return new Promise((resolve) => {
+    confirmActionText.textContent = actionDescription;
+    confirmDialog.classList.remove('hidden');
+
+    confirmYesBtn.onclick = () => {
+      confirmDialog.classList.add('hidden');
+      resolve(true);
+    };
+    confirmNoBtn.onclick = () => {
+      confirmDialog.classList.add('hidden');
+      resolve(false);
+    };
+  });
+}
+
+// Run a full goal-driven task with step confirmation
+async function runGoalTask(goal) {
+  if (isRunning) return;
+  setRunning(true);
+  setSpeech(`Alright dear, let me help you: "${goal}". I'll take it one step at a time!`);
+  speakText(`Alright dear, let me help you with that. I'll take it one step at a time!`);
+  addLog(`Goal: ${goal}`, 'info');
+
+  const previousActions = [];
+  let isDone = false;
+  let steps = 0;
+
+  while (!isDone && steps < 10) {
+    steps++;
+
+    // Take fresh screenshot each step
+    const screenshotDataUrl = await takeScreenshot();
+    const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
+
+    // Ask backend what to do next
+    let nextAction, narration, done;
+    try {
+      const res = await fetch(`${API}/api/next-action`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ request: goal, screenshot: base64, previousActions })
+      });
+      const data = await res.json();
+      nextAction = data.action;
+      narration = data.narration;
+      done = data.isDone;
+    } catch {
+      addLog('Could not reach backend', 'warning');
+      break;
+    }
+
+    setSpeech(narration);
+    speakText(narration);
+
+    if (done || nextAction.action === 'done') {
+      isDone = true;
+      addLog('✅ Task complete!', 'success');
+      setSpeech("There we go, dear! I've finished that for you. Was there anything else you needed?");
+      speakText("There we go, dear! I've finished that for you.");
+      break;
+    }
+
+    // Confirm before critical actions
+    const criticalActions = ['click', 'type'];
+    if (criticalActions.includes(nextAction.action)) {
+      const actionDesc = nextAction.action === 'type'
+        ? `Type "${nextAction.value}" into ${nextAction.target || 'the field'}`
+        : `Click on "${nextAction.target}"`;
+
+      const confirmed = await confirmAction(actionDesc);
+      if (!confirmed) {
+        addLog(`Skipped: ${actionDesc}`, 'info');
+        previousActions.push(`Skipped: ${actionDesc}`);
+        continue;
+      }
+    }
+
+    // Execute on real page
+    const result = await executeOnPage(nextAction);
+    addLog(result?.result || nextAction.action, 'success');
+    previousActions.push(`Step ${steps}: ${nextAction.action} ${nextAction.target || ''}`);
+
+    // Wait for page to respond
+    await new Promise(r => setTimeout(r, 2000));
+  }
+
+  setRunning(false);
+  await loadSuggestions();
+}
+
 // UI helpers
 function setSpeech(text) {
   speech.textContent = text;
@@ -259,6 +360,31 @@ voiceBtn.addEventListener('click', () => {
     voiceBtn.textContent = '🎙️';
   };
   recognition.start();
+});
+
+// Task mode
+taskBtn.addEventListener('click', () => {
+  taskDialog.classList.toggle('hidden');
+});
+
+taskCancelBtn.addEventListener('click', () => {
+  taskDialog.classList.add('hidden');
+  taskGoalInput.value = '';
+});
+
+taskConfirmBtn.addEventListener('click', () => {
+  const goal = taskGoalInput.value.trim();
+  if (!goal) return;
+  taskDialog.classList.add('hidden');
+  taskGoalInput.value = '';
+  runGoalTask(goal);
+});
+
+taskGoalInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    taskConfirmBtn.click();
+  }
 });
 
 // Init

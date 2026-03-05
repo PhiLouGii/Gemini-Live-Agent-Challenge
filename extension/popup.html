@@ -36,10 +36,32 @@
     </div>
   </div>
 
-  <div class="quick-buttons">
-    <button class="quick-btn" id="explainBtn">📖 Explain page</button>
-    <button class="quick-btn" id="scanBtn">🛡️ Check scams</button>
+  <div class="task-button-area">
+  <button class="task-btn" id="taskBtn">🤝 Complete a Task for Me</button>
+</div>
+
+<div class="task-dialog hidden" id="taskDialog">
+  <div class="task-dialog-title">What would you like me to do?</div>
+  <textarea id="taskGoalInput" placeholder="e.g. Search for flights to Paris, Find me a red dress under $50..." rows="3"></textarea>
+  <div class="task-dialog-buttons">
+    <button class="task-cancel-btn" id="taskCancelBtn">Cancel</button>
+    <button class="task-confirm-btn" id="taskConfirmBtn">Let's do it! 🚀</button>
   </div>
+</div>
+
+<div class="confirm-dialog hidden" id="confirmDialog">
+  <div class="confirm-title">⚡ About to do this:</div>
+  <div class="confirm-action" id="confirmActionText"></div>
+  <div class="task-dialog-buttons">
+    <button class="task-cancel-btn" id="confirmNoBtn">Skip</button>
+    <button class="task-confirm-btn" id="confirmYesBtn">Yes, do it!</button>
+  </div>
+</div>
+
+<div class="quick-buttons">
+  <button class="quick-btn" id="explainBtn">📖 Explain page</button>
+  <button class="quick-btn" id="scanBtn">🛡️ Check scams</button>
+</div>
 
   <div class="suggestions hidden" id="suggestions">
     <div class="suggestions-title">YOU MIGHT WANT TO...</div>
