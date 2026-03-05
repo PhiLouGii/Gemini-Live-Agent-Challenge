@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { initBrowser, getScreenshot, navigateTo, closeBrowser } from './src/screenshot';
-import { getNextAction, detectScam, simplifyPage, getSuggestions } from './src/gemini';
+import { getNextAction, detectScam, simplifyPage, getSuggestions, simplifyFormFields } from './src/gemini';
 import { executeAction } from './src/actions';
 
 dotenv.config({ path: '../.env' });
@@ -254,6 +254,17 @@ app.post('/api/next-action', async (req, res) => {
     const { request, screenshot, previousActions } = req.body;
     const result = await getNextAction(screenshot, request, previousActions || []);
     res.json(result);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Simplify form fields
+app.post('/api/simplify-form', async (req, res) => {
+  try {
+    const { fields, screenshot } = req.body;
+    const result = await simplifyFormFields(fields, screenshot);
+    res.json({ fields: result });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

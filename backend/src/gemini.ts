@@ -162,3 +162,47 @@ Keep each suggestion under 8 words. Return ONLY the JSON array.`
   const cleaned = text.replace(/```json|```/g, '').trim();
   return JSON.parse(cleaned);
 }
+
+export async function simplifyFormFields(
+  fields: any[],
+  base64Image: string
+): Promise<any[]> {
+  const result = await model.generateContent({
+    contents: [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: 'image/png', data: base64Image } },
+        {
+          text: `You are Grandma Mode helping an elderly user fill out a form.
+
+Here are the form fields found on the page:
+${JSON.stringify(fields, null, 2)}
+
+For each field, provide a simplified explanation in plain English.
+
+Respond ONLY with a JSON array like this:
+[
+  {
+    "id": "field id from input",
+    "simpleLabel": "Simple name for this field",
+    "explanation": "One warm sentence explaining what to put here",
+    "example": "An example value (optional, leave empty string if not helpful)",
+    "required": true or false
+  }
+]
+
+Rules:
+- Use simple language an elderly person would understand
+- Be warm and reassuring
+- Keep explanations under 15 words
+- Give practical examples where helpful
+- ONLY return the JSON array`
+        }
+      ]
+    }]
+  });
+
+  const text = result.response.candidates![0].content.parts[0].text!;
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(cleaned);
+}
