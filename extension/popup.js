@@ -38,6 +38,11 @@ const formFields = document.getElementById('formFields');
 const formCloseBtn = document.getElementById('formCloseBtn');
 const formSubmitBtn = document.getElementById('formSubmitBtn');
 const formValidateArea = document.getElementById('formValidateArea');
+const confusionDialog = document.getElementById('confusionDialog');
+const confusionTitle = document.getElementById('confusionTitle');
+const confusionMessage = document.getElementById('confusionMessage');
+const confusionDismissBtn = document.getElementById('confusionDismissBtn');
+const confusionHelpBtn = document.getElementById('confusionHelpBtn');
 
 let isRunning = false;
 let ws = null;
@@ -415,6 +420,34 @@ async function simplifyForm() {
   addLog('Form simplified!', 'success');
 }
 
+function showConfusionPrompt(reason) {
+  const messages = {
+    rapid_scroll: {
+      title: "Looking for something, dear?",
+      message: "I noticed you're scrolling quite a bit. Would you like me to help you find what you're looking for?",
+      speech: "I noticed you're scrolling a lot dear. Are you looking for something? I can help!"
+    },
+    back_clicking: {
+      title: "Having trouble finding the right page?",
+      message: "I see you've gone back a few times. It's easy to get lost online! Would you like step-by-step guidance?",
+      speech: "I noticed you went back a couple of times. Would you like me to guide you step by step?"
+    },
+    idle: {
+      title: "Still there, dear?",
+      message: "You've been on this page for a while. Would you like me to explain what's on here or help you do something?",
+      speech: "You seem to have been on this page for a while. Would you like some help?"
+    }
+  };
+
+  const msg = messages[reason] || messages.idle;
+  confusionTitle.textContent = msg.title;
+  confusionMessage.textContent = msg.message;
+  confusionDialog.classList.remove('hidden');
+  speakText(msg.speech);
+  setSpeech(msg.speech);
+  addLog('🤔 Confusion detected — offering help', 'info');
+}
+
 // UI helpers
 function setSpeech(text) {
   speech.textContent = text;
@@ -581,10 +614,26 @@ formSubmitBtn.addEventListener('click', async () => {
   }
 });
 
+// Confusion dialog
+confusionDismissBtn.addEventListener('click', () => {
+  confusionDialog.classList.add('hidden');
+  setSpeech("No problem dear! I'm here if you need me.");
+});
+
+confusionHelpBtn.addEventListener('click', () => {
+  confusionDialog.classList.add('hidden');
+  explainPage();
+  setSpeech("Of course dear! Let me explain what's on this page for you.");
+  speakText("Of course dear! Let me explain what's on this page for you.");
+});
+
 // Init
 connectWS();
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'SENSITIVE_PAGE_DETECTED') {
     showSafetyWarning(message.payload);
+  }
+  if (message.type === 'CONFUSION_DETECTED') {
+    showConfusionPrompt(message.payload.reason);
   }
 });

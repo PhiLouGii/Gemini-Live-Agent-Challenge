@@ -546,3 +546,34 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   padding: 10px;
   font-size: 0.95rem;
 }
+
+.confusion-dialog {
+  margin: 0 12px 10px;
+  background: #f0f8ff;
+  border: 2px solid #3498db;
+  border-radius: 14px;
+  padding: 16px;
+  text-align: center;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.confusion-icon { font-size: 2rem; margin-bottom: 6px; }
+
+.confusion-title {
+  font-size: 0.95rem;
+  font-weight: bold;
+  color: #2980b9;
+  margin-bottom: 6px;
+}
+
+.confusion-message {
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+  line-height: 1.4;
+}

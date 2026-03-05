@@ -7,10 +7,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // Forward sensitive page detection to popup
-  if (message.type === 'SENSITIVE_PAGE_DETECTED') {
+  // Forward to popup
+  if (message.type === 'SENSITIVE_PAGE_DETECTED' ||
+      message.type === 'CONFUSION_DETECTED') {
     chrome.runtime.sendMessage({
-      type: 'SENSITIVE_PAGE_DETECTED',
+      type: message.type,
       payload: message.payload
     });
   }

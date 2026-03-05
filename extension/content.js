@@ -354,3 +354,68 @@ function highlightFormField(fieldId) {
     }, 3000);
   }
 }
+
+// ── Confusion Detection ───────────────────────────────────────────
+(function() {
+  let rapidScrollCount = 0;
+  let backClickCount = 0;
+  let lastScrollTime = 0;
+  let idleTimer = null;
+  let confusionReported = false;
+  const IDLE_THRESHOLD = 30000; // 30 seconds
+  const SCROLL_THRESHOLD = 5;   // 5 rapid scrolls
+
+  function reportConfusion(reason) {
+    if (confusionReported) return;
+    confusionReported = true;
+    chrome.runtime.sendMessage({
+      type: 'CONFUSION_DETECTED',
+      payload: { reason }
+    });
+    // Reset after 2 minutes
+    setTimeout(() => confusionReported = false, 120000);
+  }
+
+  // Rapid scroll detection
+  window.addEventListener('scroll', () => {
+    const now = Date.now();
+    if (now - lastScrollTime < 500) {
+      rapidScrollCount++;
+      if (rapidScrollCount >= SCROLL_THRESHOLD) {
+        reportConfusion('rapid_scroll');
+        rapidScrollCount = 0;
+      }
+    } else {
+      rapidScrollCount = 0;
+    }
+    lastScrollTime = now;
+    resetIdleTimer();
+  });
+
+  // Back button / navigation confusion
+  let historyLength = window.history.length;
+  window.addEventListener('popstate', () => {
+    backClickCount++;
+    if (backClickCount >= 2) {
+      reportConfusion('back_clicking');
+      backClickCount = 0;
+    }
+    resetIdleTimer();
+  });
+
+  // Mouse movement resets idle
+  window.addEventListener('mousemove', resetIdleTimer);
+  window.addEventListener('keydown', resetIdleTimer);
+  window.addEventListener('click', resetIdleTimer);
+
+  // Idle detection
+  function resetIdleTimer() {
+    clearTimeout(idleTimer);
+    idleTimer = setTimeout(() => {
+      reportConfusion('idle');
+    }, IDLE_THRESHOLD);
+  }
+
+  // Start idle timer
+  resetIdleTimer();
+})();
