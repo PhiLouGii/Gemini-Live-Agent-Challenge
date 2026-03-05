@@ -26,6 +26,12 @@ const confirmNoBtn = document.getElementById('confirmNoBtn');
 const guidedToggle = document.getElementById('guidedToggle');
 const guidedBanner = document.getElementById('guidedBanner');
 let isGuidedMode = true;
+const safetyDialog = document.getElementById('safetyDialog');
+const safetyMessage = document.getElementById('safetyMessage');
+const safetyDetails = document.getElementById('safetyDetails');
+const safetyLeaveBtn = document.getElementById('safetyLeaveBtn');
+const safetyProceedBtn = document.getElementById('safetyProceedBtn');
+let safetyAcknowledged = false;
 
 let isRunning = false;
 let ws = null;
@@ -61,7 +67,7 @@ function handleWSMessage(msg) {
       break;
     case 'done':
       setRunning(false);
-      addLog('✅ Task complete!', 'success');
+      addLog(' Task complete!', 'success');
       loadSuggestions();
       break;
     case 'error':
@@ -72,6 +78,9 @@ function handleWSMessage(msg) {
       if (msg.action && msg.action.target) {
         highlightOnPage(msg.action.target);
       }
+      break;
+    case 'SENSITIVE_PAGE_DETECTED':
+      showSafetyWarning(msg.payload);
       break;
   }
 }
@@ -295,6 +304,26 @@ function updateGuidedBanner() {
   }
 }
 
+function showSafetyWarning(payload) {
+  if (safetyAcknowledged) return; // don't show twice
+
+  const messages = {
+    payment: "I can see this page is asking for payment or card information. Before you enter anything, let me make sure this site is safe!",
+    checkout: "This looks like a checkout or payment page, dear. Are you sure you're ready to complete this purchase?",
+    download: "This page wants you to download something. Downloads can sometimes contain harmful software. Shall I check it first?",
+    personal: "I noticed this page is asking for personal information. Let's make sure it's safe before you share anything!"
+  };
+
+  safetyMessage.textContent = messages[payload.type] || messages.personal;
+  safetyDetails.textContent = payload.message;
+  safetyDialog.classList.remove('hidden');
+
+  // Speak the warning
+  speakText("Hold on sweetheart! " + (messages[payload.type] || messages.personal));
+  setSpeech("Hold on sweetheart! " + (messages[payload.type] || messages.personal));
+  addLog('🛡️ Safety check triggered', 'warning');
+}
+
 // Highlight element on the real page
 function highlightOnPage(target) {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -435,5 +464,27 @@ guidedToggle.addEventListener('change', () => {
 
 updateGuidedBanner();
 
+// Safety dialog buttons
+safetyLeaveBtn.addEventListener('click', () => {
+  safetyDialog.classList.add('hidden');
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.goBack(tabs[0].id);
+  });
+  setSpeech("Good call, dear! I've taken you back to safety.");
+  speakText("Good call dear, I've taken you back to safety.");
+});
+
+safetyProceedBtn.addEventListener('click', () => {
+  safetyAcknowledged = false;
+  safetyDialog.classList.add('hidden');
+  setSpeech("Alright dear, just be careful and only enter information you trust this site with!");
+  speakText("Alright dear, just be careful!");
+});
+
 // Init
 connectWS();
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.type === 'SENSITIVE_PAGE_DETECTED') {
+    showSafetyWarning(message.payload);
+  }
+});

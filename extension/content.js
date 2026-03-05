@@ -190,3 +190,86 @@ function typeInElement(target, value) {
 
   return `Typed "${value}" into "${target}"`;
 }
+
+// ── Payment/Personal Data Detection ──────────────────────────────
+function detectSensitivePage() {
+  const sensitivePatterns = [
+    // Payment fields
+    'card number', 'credit card', 'debit card', 'cvv', 'cvc',
+    'expiry', 'expiration', 'card details', 'billing',
+    // Personal info
+    'social security', 'ssn', 'passport', 'date of birth',
+    'bank account', 'routing number',
+    // Downloads
+    'download now', 'download free', 'click to download',
+    // Checkout
+    'place order', 'confirm order', 'complete purchase',
+    'pay now', 'submit payment',
+  ];
+
+  const pageText = document.body.innerText.toLowerCase();
+  const inputs = document.querySelectorAll('input');
+
+  // Check input types
+  for (const input of inputs) {
+    const type = input.type?.toLowerCase();
+    const name = (input.name || input.id || input.placeholder || '').toLowerCase();
+    if (
+      type === 'tel' ||
+      name.includes('card') ||
+      name.includes('cvv') ||
+      name.includes('ccnum') ||
+      name.includes('credit') ||
+      name.includes('account')
+    ) {
+      return {
+        detected: true,
+        type: 'payment',
+        message: 'I can see fields asking for card or payment information on this page.'
+      };
+    }
+  }
+
+  // Check page text
+  for (const pattern of sensitivePatterns) {
+    if (pageText.includes(pattern)) {
+      const type = ['download', 'install'].some(w => pattern.includes(w))
+        ? 'download'
+        : pattern.includes('order') || pattern.includes('pay') || pattern.includes('purchase')
+        ? 'checkout'
+        : 'personal';
+
+      return {
+        detected: true,
+        type,
+        message: `I noticed this page is asking for ${type === 'payment' ? 'payment details' : type === 'download' ? 'a download' : 'personal information'}.`
+      };
+    }
+  }
+
+  return { detected: false };
+}
+
+// Run detection when page loads and report back
+(function () {
+  const result = detectSensitivePage();
+  if (result.detected) {
+    chrome.runtime.sendMessage({
+      type: 'SENSITIVE_PAGE_DETECTED',
+      payload: result
+    });
+  }
+})();
+
+// Also watch for dynamic changes (e.g. checkout appearing after clicking)
+const observer = new MutationObserver(() => {
+  const result = detectSensitivePage();
+  if (result.detected) {
+    chrome.runtime.sendMessage({
+      type: 'SENSITIVE_PAGE_DETECTED',
+      payload: result
+    });
+    observer.disconnect(); // only fire once
+  }
+});
+observer.observe(document.body, { childList: true, subtree: true });
