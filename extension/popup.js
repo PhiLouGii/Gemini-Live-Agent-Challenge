@@ -65,6 +65,11 @@ function handleWSMessage(msg) {
       setRunning(false);
       addLog(`Error: ${msg.message}`, 'warning');
       break;
+    case 'action':
+      if (msg.action && msg.action.target) {
+        highlightOnPage(msg.action.target);
+      }
+      break;
   }
 }
 
@@ -268,6 +273,16 @@ async function runGoalTask(goal) {
 
   setRunning(false);
   await loadSuggestions();
+}
+
+// Highlight element on the real page
+function highlightOnPage(target) {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    chrome.tabs.sendMessage(tabs[0].id, {
+      type: 'HIGHLIGHT_ELEMENT',
+      target
+    });
+  });
 }
 
 // UI helpers
