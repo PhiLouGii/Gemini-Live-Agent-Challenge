@@ -23,6 +23,9 @@ const confirmDialog = document.getElementById('confirmDialog');
 const confirmActionText = document.getElementById('confirmActionText');
 const confirmYesBtn = document.getElementById('confirmYesBtn');
 const confirmNoBtn = document.getElementById('confirmNoBtn');
+const guidedToggle = document.getElementById('guidedToggle');
+const guidedBanner = document.getElementById('guidedBanner');
+let isGuidedMode = true;
 
 let isRunning = false;
 let ws = null;
@@ -247,20 +250,27 @@ async function runGoalTask(goal) {
       break;
     }
 
-    // Confirm before critical actions
-    const criticalActions = ['click', 'type'];
-    if (criticalActions.includes(nextAction.action)) {
-      const actionDesc = nextAction.action === 'type'
-        ? `Type "${nextAction.value}" into ${nextAction.target || 'the field'}`
-        : `Click on "${nextAction.target}"`;
+    // In guided mode: explain + confirm each step
+if (isGuidedMode) {
+  const criticalActions = ['click', 'type'];
+  if (criticalActions.includes(nextAction.action)) {
+    const actionDesc = nextAction.action === 'type'
+      ? `Type "${nextAction.value}" into ${nextAction.target || 'the field'}`
+      : `Click on "${nextAction.target}"`;
 
-      const confirmed = await confirmAction(actionDesc);
-      if (!confirmed) {
-        addLog(`Skipped: ${actionDesc}`, 'info');
-        previousActions.push(`Skipped: ${actionDesc}`);
-        continue;
-      }
+    const confirmed = await confirmAction(actionDesc);
+    if (!confirmed) {
+      addLog(`Skipped: ${actionDesc}`, 'info');
+      previousActions.push(`Skipped: ${actionDesc}`);
+      continue;
     }
+  }
+}
+// In auto mode: just highlight briefly then act
+else {
+  if (nextAction.target) highlightOnPage(nextAction.target);
+  await new Promise(r => setTimeout(r, 800));
+}
 
     // Execute on real page
     const result = await executeOnPage(nextAction);
@@ -273,6 +283,16 @@ async function runGoalTask(goal) {
 
   setRunning(false);
   await loadSuggestions();
+}
+
+function updateGuidedBanner() {
+  if (isGuidedMode) {
+    guidedBanner.className = 'guided-banner';
+    guidedBanner.textContent = '🐢 Guided Mode ON — I\'ll explain each step and ask before acting';
+  } else {
+    guidedBanner.className = 'guided-banner off';
+    guidedBanner.textContent = '⚡ Guided Mode OFF — I\'ll complete tasks automatically';
+  }
 }
 
 // Highlight element on the real page
@@ -401,6 +421,19 @@ taskGoalInput.addEventListener('keydown', (e) => {
     taskConfirmBtn.click();
   }
 });
+
+// Guided mode toggle
+guidedToggle.addEventListener('change', () => {
+  isGuidedMode = guidedToggle.checked;
+  updateGuidedBanner();
+  const msg = isGuidedMode
+    ? "Guided mode is on, dear. I'll walk you through everything carefully!"
+    : "Got it! I'll work quickly and complete tasks automatically.";
+  setSpeech(msg);
+  speakText(msg);
+});
+
+updateGuidedBanner();
 
 // Init
 connectWS();
