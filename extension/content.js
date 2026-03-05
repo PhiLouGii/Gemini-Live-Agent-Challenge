@@ -273,3 +273,84 @@ const observer = new MutationObserver(() => {
   }
 });
 observer.observe(document.body, { childList: true, subtree: true });
+
+// ── Form Scanner ──────────────────────────────────────────────────
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'SCAN_FORMS') {
+    const fields = scanForms();
+    sendResponse({ fields });
+    return true;
+  }
+
+  if (message.type === 'HIGHLIGHT_FIELD') {
+    highlightFormField(message.fieldId);
+    sendResponse({ success: true });
+    return true;
+  }
+
+  if (message.type === 'SUBMIT_FORM') {
+    const form = document.querySelector('form');
+    if (form) {
+      form.submit();
+      sendResponse({ success: true });
+    } else {
+      sendResponse({ success: false });
+    }
+    return true;
+  }
+});
+
+function scanForms() {
+  const forms = document.querySelectorAll('form');
+  if (forms.length === 0) return [];
+
+  const fields = [];
+  const form = forms[0]; // take first form
+
+  const inputs = form.querySelectorAll(
+    'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select'
+  );
+
+  inputs.forEach((input, index) => {
+    const id = input.id || input.name || `field_${index}`;
+    const label = findLabelFor(input) || input.placeholder || input.name || id;
+    const required = input.required || input.getAttribute('aria-required') === 'true';
+    const type = input.type || 'text';
+    const value = input.value || '';
+
+    fields.push({ id, label, required, type, value, index });
+  });
+
+  return fields;
+}
+
+function findLabelFor(input) {
+  // Try label[for]
+  if (input.id) {
+    const label = document.querySelector(`label[for="${input.id}"]`);
+    if (label) return label.textContent.trim();
+  }
+  // Try parent label
+  const parentLabel = input.closest('label');
+  if (parentLabel) return parentLabel.textContent.trim();
+  // Try aria-label
+  if (input.getAttribute('aria-label')) return input.getAttribute('aria-label');
+  // Try placeholder
+  if (input.placeholder) return input.placeholder;
+  return null;
+}
+
+function highlightFormField(fieldId) {
+  const el = document.getElementById(fieldId) ||
+    document.querySelector(`[name="${fieldId}"]`);
+  if (el) {
+    el.style.outline = '3px solid #f39c12';
+    el.style.boxShadow = '0 0 10px rgba(243,156,18,0.5)';
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    el.focus();
+    setTimeout(() => {
+      el.style.outline = '';
+      el.style.boxShadow = '';
+    }, 3000);
+  }
+}

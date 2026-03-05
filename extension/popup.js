@@ -32,6 +32,12 @@ const safetyDetails = document.getElementById('safetyDetails');
 const safetyLeaveBtn = document.getElementById('safetyLeaveBtn');
 const safetyProceedBtn = document.getElementById('safetyProceedBtn');
 let safetyAcknowledged = false;
+const formBtn = document.getElementById('formBtn');
+const formPanel = document.getElementById('formPanel');
+const formFields = document.getElementById('formFields');
+const formCloseBtn = document.getElementById('formCloseBtn');
+const formSubmitBtn = document.getElementById('formSubmitBtn');
+const formValidateArea = document.getElementById('formValidateArea');
 
 let isRunning = false;
 let ws = null;
@@ -334,6 +340,81 @@ function highlightOnPage(target) {
   });
 }
 
+async function simplifyForm() {
+  addLog('Scanning form fields...', 'pending');
+
+  // Get raw fields from page
+  const fields = await new Promise((resolve) => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { type: 'SCAN_FORMS' }, (res) => {
+        resolve(res?.fields || []);
+      });
+    });
+  });
+
+  if (fields.length === 0) {
+    setSpeech("I don't see any forms on this page, dear. Try navigating to a page with a form!");
+    speakText("I don't see any forms on this page dear.");
+    return;
+  }
+
+  addLog(`Found ${fields.length} form fields`, 'success');
+  setSpeech("I found a form! Let me explain each field in simple terms for you, dear.");
+  speakText("I found a form! Let me explain each field in simple terms.");
+
+  // Send to backend for AI simplification
+  const screenshotDataUrl = await takeScreenshot();
+  const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
+
+  let simplified;
+  try {
+    const res = await fetch(`${API}/api/simplify-form`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fields, screenshot: base64 })
+    });
+    simplified = await res.json();
+  } catch {
+    addLog('Could not reach backend', 'warning');
+    return;
+  }
+
+  // Render simplified fields
+  formFields.innerHTML = '';
+  simplified.fields.forEach(field => {
+    const card = document.createElement('div');
+    card.className = 'form-field-card';
+    card.innerHTML = `
+      <div class="form-field-label">
+        ${field.simpleLabel}
+        <span class="${field.required ? 'form-field-required' : 'form-field-optional'}">
+          ${field.required ? 'Required' : 'Optional'}
+        </span>
+      </div>
+      <div class="form-field-explanation">${field.explanation}</div>
+      ${field.example ? `<div class="form-field-example">Example: ${field.example}</div>` : ''}
+    `;
+
+    // Click card to highlight field on page
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, {
+          type: 'HIGHLIGHT_FIELD',
+          fieldId: field.id
+        });
+      });
+      addLog(`Highlighting: ${field.simpleLabel}`, 'info');
+    });
+
+    formFields.appendChild(card);
+  });
+
+  formValidateArea.classList.remove('hidden');
+  formPanel.classList.remove('hidden');
+  addLog('Form simplified!', 'success');
+}
+
 // UI helpers
 function setSpeech(text) {
   speech.textContent = text;
@@ -479,6 +560,25 @@ safetyProceedBtn.addEventListener('click', () => {
   safetyDialog.classList.add('hidden');
   setSpeech("Alright dear, just be careful and only enter information you trust this site with!");
   speakText("Alright dear, just be careful!");
+});
+
+// Form simplifier
+formBtn.addEventListener('click', simplifyForm);
+
+formCloseBtn.addEventListener('click', () => {
+  formPanel.classList.add('hidden');
+});
+
+formSubmitBtn.addEventListener('click', async () => {
+  const confirmed = await confirmAction('Submit this form');
+  if (confirmed) {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, { type: 'SUBMIT_FORM' });
+    });
+    formPanel.classList.add('hidden');
+    setSpeech("I've submitted the form for you, dear! Let's see what happens next.");
+    speakText("I've submitted the form for you dear!");
+  }
 });
 
 // Init

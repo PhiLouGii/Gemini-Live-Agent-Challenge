@@ -447,3 +447,102 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   font-family: Georgia, serif;
   font-size: 0.85rem;
 }
+
+.quick-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 12px 10px;
+}
+
+.form-panel {
+  margin: 0 12px 10px;
+  background: white;
+  border: 2px solid #c9a87a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.form-panel-header {
+  background: #7c4f2f;
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.form-panel-header button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.form-field-card {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f0e6d3;
+}
+
+.form-field-card:last-child {
+  border-bottom: none;
+}
+
+.form-field-label {
+  font-size: 0.88rem;
+  font-weight: bold;
+  color: #5a3820;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.form-field-required {
+  background: #e74c3c;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: normal;
+}
+
+.form-field-optional {
+  background: #95a5a6;
+  color: white;
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-weight: normal;
+}
+
+.form-field-explanation {
+  font-size: 0.82rem;
+  color: #666;
+  font-style: italic;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.form-field-example {
+  font-size: 0.78rem;
+  color: #27ae60;
+  background: #eafaf1;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.form-validate-area {
+  padding: 12px 14px;
+  border-top: 2px solid #f0e6d3;
+}
+
+.form-validate-area button {
+  width: 100%;
+  padding: 10px;
+  font-size: 0.95rem;
+}
