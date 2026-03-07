@@ -43,6 +43,13 @@ const confusionTitle = document.getElementById('confusionTitle');
 const confusionMessage = document.getElementById('confusionMessage');
 const confusionDismissBtn = document.getElementById('confusionDismissBtn');
 const confusionHelpBtn = document.getElementById('confusionHelpBtn');
+const memoryBtn = document.getElementById('memoryBtn');
+const memoryPanel = document.getElementById('memoryPanel');
+const memoryList = document.getElementById('memoryList');
+const memoryCloseBtn = document.getElementById('memoryCloseBtn');
+const memoryKeyInput = document.getElementById('memoryKeyInput');
+const memorySaveBtn = document.getElementById('memorySaveBtn');
+const memoryTaskCount = document.getElementById('memoryTaskCount');
 
 let isRunning = false;
 let ws = null;
@@ -448,6 +455,40 @@ function showConfusionPrompt(reason) {
   addLog('🤔 Confusion detected — offering help', 'info');
 }
 
+async function loadMemory() {
+  try {
+    const res = await fetch(`${API}/api/memory`);
+    const data = await res.json();
+
+    memoryTaskCount.textContent = `Tasks completed: ${data.totalTasks || 0}`;
+
+    if (!data.preferences || data.preferences.length === 0) {
+      memoryList.innerHTML = '<div class="memory-empty">I\'m still learning about you, dear!</div>';
+      return;
+    }
+
+    memoryList.innerHTML = '';
+    data.preferences.forEach(pref => {
+      const item = document.createElement('div');
+      item.className = 'memory-item';
+      item.innerHTML = `
+        <span>✨ ${pref.value}</span>
+        <button onclick="deleteMemory('${pref.key}')">✕</button>
+      `;
+      memoryList.appendChild(item);
+    });
+
+    memoryPanel.classList.remove('hidden');
+  } catch {
+    addLog('Could not load memory', 'warning');
+  }
+}
+
+async function deleteMemory(key) {
+  await fetch(`${API}/api/memory/preference/${key}`, { method: 'DELETE' });
+  loadMemory();
+}
+
 // UI helpers
 function setSpeech(text) {
   speech.textContent = text;
@@ -625,6 +666,30 @@ confusionHelpBtn.addEventListener('click', () => {
   explainPage();
   setSpeech("Of course dear! Let me explain what's on this page for you.");
   speakText("Of course dear! Let me explain what's on this page for you.");
+});
+
+// Memory panel
+memoryBtn.addEventListener('click', () => {
+  memoryPanel.classList.toggle('hidden');
+  if (!memoryPanel.classList.contains('hidden')) loadMemory();
+});
+
+memoryCloseBtn.addEventListener('click', () => {
+  memoryPanel.classList.add('hidden');
+});
+
+memorySaveBtn.addEventListener('click', async () => {
+  const value = memoryKeyInput.value.trim();
+  if (!value) return;
+  await fetch(`${API}/api/memory/preference`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: `custom_${Date.now()}`, value })
+  });
+  memoryKeyInput.value = '';
+  loadMemory();
+  setSpeech(`Got it dear! I'll remember that ${value}`);
+  speakText(`Got it dear! I'll remember that.`);
 });
 
 // Init

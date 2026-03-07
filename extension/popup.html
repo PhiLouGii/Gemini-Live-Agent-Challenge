@@ -107,10 +107,28 @@
   </div>
 </div>
 
+<div class="memory-panel hidden" id="memoryPanel">
+  <div class="memory-header">
+    <span>🧠 What I Know About You</span>
+    <button id="memoryCloseBtn">✕</button>
+  </div>
+  <div id="memoryList">
+    <div class="memory-empty">I'm still learning about you, dear!</div>
+  </div>
+  <div class="memory-add">
+    <input type="text" id="memoryKeyInput" placeholder="What I should remember..." />
+    <button id="memorySaveBtn">Save</button>
+  </div>
+  <div class="memory-footer">
+    <span id="memoryTaskCount">Tasks completed: 0</span>
+  </div>
+</div>
+
 <div class="quick-buttons">
   <button class="quick-btn" id="explainBtn">📖 Explain page</button>
   <button class="quick-btn" id="scanBtn">🛡️ Check scams</button>
   <button class="quick-btn" id="formBtn">📝 Simplify Form</button>
+  <button class="quick-btn" id="memoryBtn">🧠 My Preferences</button>
 </div>
 
   <div class="suggestions hidden" id="suggestions">

@@ -577,3 +577,90 @@ input:checked + .toggle-slider:before { transform: translateX(16px); }
   font-style: italic;
   line-height: 1.4;
 }
+
+.memory-panel {
+  margin: 0 12px 10px;
+  background: white;
+  border: 2px solid #c9a87a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.memory-header {
+  background: #7c4f2f;
+  color: white;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  font-weight: bold;
+}
+
+.memory-header button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.memory-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-bottom: 1px solid #f0e6d3;
+  font-size: 0.85rem;
+  color: #5a3820;
+}
+
+.memory-item button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e74c3c;
+  font-size: 0.85rem;
+}
+
+.memory-empty {
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  color: #999;
+  font-style: italic;
+}
+
+.memory-add {
+  display: flex;
+  gap: 8px;
+  padding: 10px 14px;
+  border-top: 1px solid #f0e6d3;
+}
+
+.memory-add input {
+  flex: 1;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #c9a87a;
+  font-size: 0.82rem;
+  font-family: Georgia, serif;
+  outline: none;
+}
+
+.memory-add button {
+  padding: 6px 12px;
+  background: #7c4f2f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-family: Georgia, serif;
+}
+
+.memory-footer {
+  padding: 8px 14px;
+  font-size: 0.78rem;
+  color: #999;
+  border-top: 1px solid #f0e6d3;
+}

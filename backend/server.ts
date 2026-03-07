@@ -5,6 +5,7 @@ import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { initBrowser, getScreenshot, navigateTo, closeBrowser } from './src/screenshot';
 import { getNextAction, detectScam, simplifyPage, getSuggestions, simplifyFormFields } from './src/gemini';
+import { getUserMemory, savePreference, deletePreference, incrementTaskCount, extractAndSavePreferences } from './src/memory';
 import { executeAction } from './src/actions';
 
 dotenv.config({ path: '../.env' });
@@ -205,6 +206,9 @@ app.post('/api/task-extension', async (req, res) => {
           break;
         }
 
+        await incrementTaskCount();
+        await extractAndSavePreferences(request);
+
         previousActions.push(`Step ${steps}: ${action.action} ${action.target || ''}`);
         sendToClient('log', { text: `${action.action} ${action.target || ''}` });
 
@@ -265,6 +269,35 @@ app.post('/api/simplify-form', async (req, res) => {
     const { fields, screenshot } = req.body;
     const result = await simplifyFormFields(fields, screenshot);
     res.json({ fields: result });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── Memory endpoints ──────────────────────────────────────────────
+app.get('/api/memory', async (req, res) => {
+  try {
+    const memory = await getUserMemory();
+    res.json(memory);
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/memory/preference', async (req, res) => {
+  try {
+    const { key, value } = req.body;
+    await savePreference(key, value);
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/memory/preference/:key', async (req, res) => {
+  try {
+    await deletePreference(req.params.key);
+    res.json({ success: true });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
