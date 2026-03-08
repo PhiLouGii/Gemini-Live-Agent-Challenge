@@ -74,7 +74,7 @@ Rules:
 // ── 3. Scam detection ─────────────────────────────────────────────
 export async function detectScam(
   base64Image: string
-): Promise<{ isScam: boolean; reason: string; warning: string }> {
+): Promise<{ isScam: boolean; reason: string; warning: string; signals: string[] }> {
 
   const result = await model.generateContent({
     contents: [{
@@ -92,12 +92,15 @@ Analyze this webpage screenshot for scam signals:
 - Too-good-to-be-true offers
 - Fake warnings or virus alerts
 - Impersonation of banks/government
+- Misspelled URLs or fake branding
+- Pressure tactics
 
 Respond ONLY with this exact JSON:
 {
   "isScam": true or false,
-  "reason": "brief technical reason",
-  "warning": "warm gentle warning message for an elderly user (if scam), or empty string (if safe)"
+  "reason": "brief technical one-line reason",
+  "signals": ["signal 1", "signal 2", "signal 3"],
+  "warning": "warm gentle warning message for elderly user (if scam), or empty string if safe"
 }`
         }
       ]

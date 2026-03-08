@@ -37,10 +37,20 @@
   </div>
 
   <div class="scam-warning hidden" id="scamWarning">
+  <div class="scam-top">
     <span>⚠️</span>
-    <div id="scamText"></div>
+    <div class="scam-title">Hold on, sweetheart!</div>
     <button id="dismissScam">✕</button>
   </div>
+  <div id="scamText" class="scam-message"></div>
+  <div class="scam-signals hidden" id="scamSignals">
+    <div class="scam-signals-title">🔍 Here's why I'm concerned:</div>
+    <ul id="scamSignalList"></ul>
+  </div>
+  <button class="scam-details-btn" id="scamDetailsBtn">
+    Show me why →
+  </button>
+</div>
 
   <div class="action-log" id="actionLog">
     <div class="log-title">WHAT I'M DOING</div>

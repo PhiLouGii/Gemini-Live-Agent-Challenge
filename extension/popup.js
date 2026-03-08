@@ -50,6 +50,9 @@ const memoryCloseBtn = document.getElementById('memoryCloseBtn');
 const memoryKeyInput = document.getElementById('memoryKeyInput');
 const memorySaveBtn = document.getElementById('memorySaveBtn');
 const memoryTaskCount = document.getElementById('memoryTaskCount');
+const scamSignals = document.getElementById('scamSignals');
+const scamSignalList = document.getElementById('scamSignalList');
+const scamDetailsBtn = document.getElementById('scamDetailsBtn');
 
 let isRunning = false;
 let ws = null;
@@ -78,8 +81,9 @@ function handleWSMessage(msg) {
       addLog(msg.text, 'success');
       break;
     case 'scam':
-      showScamWarning(msg.warning);
-      break;
+  showScamWarning(msg);
+  addLog('⚠️ Scam detected!', 'warning');
+  break;
     case 'status':
       addLog(msg.message, 'info');
       break;
@@ -515,10 +519,36 @@ function setRunning(running) {
   chatInput.placeholder = running ? 'Please wait...' : 'Type what you need help with...';
 }
 
-function showScamWarning(text) {
-  scamText.textContent = text;
+function showScamWarning(payload) {
+  // Handle both old string format and new object format
+  const warning = typeof payload === 'string' ? payload : payload.warning;
+  const signals = typeof payload === 'object' ? (payload.signals || []) : [];
+  const reason = typeof payload === 'object' ? payload.reason : '';
+
+  scamText.textContent = warning;
   scamWarning.classList.remove('hidden');
-  speakText('Warning! ' + text);
+
+  // Populate signals list
+  if (signals.length > 0) {
+    scamSignalList.innerHTML = '';
+    signals.forEach(signal => {
+      const li = document.createElement('li');
+      li.textContent = signal;
+      scamSignalList.appendChild(li);
+    });
+    scamDetailsBtn.classList.remove('hidden');
+  } else {
+    scamDetailsBtn.classList.add('hidden');
+  }
+
+  // Spoken warning with explanation
+  const spokenWarning = signals.length > 0
+    ? `Warning dear! ${warning} I spotted ${signals.length} suspicious thing${signals.length > 1 ? 's' : ''} on this page.`
+    : `Warning! ${warning}`;
+
+  speakText(spokenWarning);
+  setSpeech(spokenWarning);
+  addLog('⚠️ Scam detected — showing explanation', 'warning');
 }
 
 // Text to speech
@@ -690,6 +720,20 @@ memorySaveBtn.addEventListener('click', async () => {
   loadMemory();
   setSpeech(`Got it dear! I'll remember that ${value}`);
   speakText(`Got it dear! I'll remember that.`);
+});
+
+// Scam signals toggle
+scamDetailsBtn.addEventListener('click', () => {
+  const isHidden = scamSignals.classList.contains('hidden');
+  scamSignals.classList.toggle('hidden');
+  scamDetailsBtn.textContent = isHidden ? 'Hide details ↑' : 'Show me why →';
+
+  if (isHidden) {
+    // Read out the signals
+    const items = Array.from(scamSignalList.querySelectorAll('li'))
+      .map(li => li.textContent).join('. ');
+    speakText(`Here's what I found suspicious: ${items}`);
+  }
 });
 
 // Init

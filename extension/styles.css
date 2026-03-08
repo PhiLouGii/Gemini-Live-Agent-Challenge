@@ -67,15 +67,91 @@ body {
 .scam-warning {
   background: #fdecea;
   border: 2px solid #e74c3c;
-  border-radius: 10px;
+  border-radius: 12px;
   margin: 0 12px 10px;
-  padding: 10px 12px;
-  display: flex;
-  gap: 8px;
-  align-items: flex-start;
-  font-size: 0.85rem;
+  padding: 12px 14px;
+  font-size: 0.88rem;
   color: #c0392b;
 }
+
+.scam-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.scam-top span { font-size: 1.3rem; flex-shrink: 0; }
+
+.scam-title {
+  font-weight: bold;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.scam-top button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #e74c3c;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.scam-message {
+  font-size: 0.85rem;
+  color: #555;
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.scam-signals {
+  background: #fff5f5;
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border: 1px solid #f5c6cb;
+}
+
+.scam-signals-title {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #c0392b;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.scam-signals ul {
+  margin: 0;
+  padding-left: 16px;
+}
+
+.scam-signals ul li {
+  font-size: 0.82rem;
+  color: #555;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.scam-details-btn {
+  background: none;
+  border: 1.5px solid #e74c3c;
+  border-radius: 8px;
+  padding: 5px 12px;
+  font-size: 0.8rem;
+  color: #e74c3c;
+  cursor: pointer;
+  font-family: Georgia, serif;
+  width: 100%;
+  transition: background 0.2s;
+}
+
+.scam-details-btn:hover {
+  background: #fdecea;
+}
+
 .scam-warning button {
   background: none; border: none;
   cursor: pointer; color: #e74c3c;
