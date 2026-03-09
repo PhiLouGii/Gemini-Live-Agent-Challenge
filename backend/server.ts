@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
 import { initBrowser, getScreenshot, navigateTo, closeBrowser } from './src/screenshot';
-import { getNextAction, detectScam, simplifyPage, getSuggestions, simplifyFormFields } from './src/gemini';
+import { getNextAction, detectScam, simplifyPage, getSuggestions, simplifyFormFields, getQuickAnswer } from './src/gemini';
 import { getUserMemory, savePreference, deletePreference, incrementTaskCount, extractAndSavePreferences } from './src/memory';
 import { executeAction } from './src/actions';
 
@@ -298,6 +298,16 @@ app.delete('/api/memory/preference/:key', async (req, res) => {
   try {
     await deletePreference(req.params.key);
     res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/quick-answer', async (req, res) => {
+  try {
+    const { request, screenshot } = req.body;
+    const result = await getQuickAnswer(request, screenshot);
+    res.json(result);
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }

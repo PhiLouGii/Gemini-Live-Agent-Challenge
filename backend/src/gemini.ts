@@ -209,3 +209,44 @@ Rules:
   const cleaned = text.replace(/```json|```/g, '').trim();
   return JSON.parse(cleaned);
 }
+
+export async function getQuickAnswer(
+  request: string,
+  base64Image: string
+): Promise<{ isQuickAnswer: boolean; answer: string; links?: { label: string; url: string }[] }> {
+
+  const result = await model.generateContent({
+    contents: [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: 'image/png', data: base64Image } },
+        {
+          text: `You are Grandma Mode helping an elderly user.
+
+The user asked: "${request}"
+
+Decide if this is a QUICK ANSWER question (like "what time does KFC close", "nearest airport", "weather today", "who is the president") that can be answered directly WITHOUT navigating anywhere.
+
+If YES: answer it warmly and provide 2-3 helpful links.
+If NO: it needs browser navigation (like "buy a red dress", "book a flight").
+
+Respond ONLY with this JSON:
+{
+  "isQuickAnswer": true or false,
+  "answer": "warm direct answer in 2 sentences max, or empty string if not quick answer",
+  "links": [
+    { "label": "short link label", "url": "https://full-url.com" }
+  ]
+}
+
+For links use real working URLs like Google Maps, Google Search, official websites.
+ONLY return JSON.`
+        }
+      ]
+    }]
+  });
+
+  const text = result.response.candidates![0].content.parts[0].text!;
+  const cleaned = text.replace(/```json|```/g, '').trim();
+  return JSON.parse(cleaned);
+}

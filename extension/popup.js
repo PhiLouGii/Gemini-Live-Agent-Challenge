@@ -119,25 +119,15 @@ async function takeScreenshot() {
 // Send screenshot + request to backend
 async function runTask(request) {
   if (isRunning) return;
-  setRunning(true);
-  addLog(`Starting: ${request}`, 'pending');
 
-  const screenshotDataUrl = await takeScreenshot();
-  // Strip the data:image/png;base64, prefix
-  const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
-
-  try {
-    await fetch(`${API}/api/task-extension`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ request, screenshot: base64 })
-    });
-  } catch (err) {
-    addLog('Could not reach backend. Is it running?', 'warning');
-    setRunning(false);
+  // Spell correct first
+  const corrected = correctSpelling(request);
+  if (corrected !== request) {
+    addLog(`📝 Corrected: "${corrected}"`, 'info');
   }
-}
 
+  await runGoalTask(corrected);
+}
 // Execute action on the real page
 async function executeOnPage(action) {
   return new Promise((resolve) => {
@@ -207,7 +197,11 @@ async function loadSuggestions() {
         const btn = document.createElement('button');
         btn.className = 'suggestion-btn';
         btn.textContent = '💬 ' + s;
-        btn.onclick = () => runTask(s);
+        btn.onclick = () => {
+          // Actually run the suggestion as a real goal task
+          suggestions.classList.add('hidden');
+          runGoalTask(s);
+        };
         suggestionItems.appendChild(btn);
       });
       suggestions.classList.remove('hidden');
@@ -238,9 +232,23 @@ function confirmAction(actionDescription) {
 async function runGoalTask(goal) {
   if (isRunning) return;
   setRunning(true);
-  setSpeech(`Alright dear, let me help you: "${goal}". I'll take it one step at a time!`);
-  speakText(`Alright dear, let me help you with that. I'll take it one step at a time!`);
-  addLog(`Goal: ${goal}`, 'info');
+  suggestions.classList.add('hidden');
+
+  setSpeech(`Alright dear, let me help you with: "${goal}". Give me just a moment!`);
+  speakText(`Alright dear, let me help you with that. Give me just a moment!`);
+  addLog(`🎯 Goal: ${goal}`, 'info');
+
+  // First check if this is a quick answer question
+  const quickAnswer = await getQuickAnswer(goal);
+  if (quickAnswer) {
+    setSpeech(quickAnswer.answer);
+    speakText(quickAnswer.answer);
+    if (quickAnswer.links?.length) {
+      showQuickLinks(quickAnswer.links);
+    }
+    setRunning(false);
+    return;
+  }
 
   const previousActions = [];
   let isDone = false;
@@ -249,17 +257,19 @@ async function runGoalTask(goal) {
   while (!isDone && steps < 10) {
     steps++;
 
-    // Take fresh screenshot each step
     const screenshotDataUrl = await takeScreenshot();
     const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
 
-    // Ask backend what to do next
     let nextAction, narration, done;
     try {
       const res = await fetch(`${API}/api/next-action`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ request: goal, screenshot: base64, previousActions })
+        body: JSON.stringify({
+          request: goal,
+          screenshot: base64,
+          previousActions
+        })
       });
       const data = await res.json();
       nextAction = data.action;
@@ -276,39 +286,38 @@ async function runGoalTask(goal) {
     if (done || nextAction.action === 'done') {
       isDone = true;
       addLog('✅ Task complete!', 'success');
-      setSpeech("There we go, dear! I've finished that for you. Was there anything else you needed?");
-      speakText("There we go, dear! I've finished that for you.");
+      setSpeech("There we go dear! All done. Was there anything else you needed?");
+      speakText("There we go dear! All done.");
       break;
     }
 
-    // In guided mode: explain + confirm each step
-if (isGuidedMode) {
-  const criticalActions = ['click', 'type'];
-  if (criticalActions.includes(nextAction.action)) {
-    const actionDesc = nextAction.action === 'type'
-      ? `Type "${nextAction.value}" into ${nextAction.target || 'the field'}`
-      : `Click on "${nextAction.target}"`;
-
-    const confirmed = await confirmAction(actionDesc);
-    if (!confirmed) {
-      addLog(`Skipped: ${actionDesc}`, 'info');
-      previousActions.push(`Skipped: ${actionDesc}`);
-      continue;
+    // Highlight element on page
+    if (nextAction.target) {
+      highlightOnPage(nextAction.target);
+      await new Promise(r => setTimeout(r, 800));
     }
-  }
-}
-// In auto mode: just highlight briefly then act
-else {
-  if (nextAction.target) highlightOnPage(nextAction.target);
-  await new Promise(r => setTimeout(r, 800));
-}
 
-    // Execute on real page
+    // Guided mode confirmation
+    if (isGuidedMode && ['click', 'type'].includes(nextAction.action)) {
+      const actionDesc = nextAction.action === 'type'
+        ? `Type "${nextAction.value}" into ${nextAction.target || 'the field'}`
+        : `Click on "${nextAction.target}"`;
+
+      const confirmed = await confirmAction(actionDesc);
+      if (!confirmed) {
+        addLog(`Skipped: ${actionDesc}`, 'info');
+        previousActions.push(`Skipped: ${actionDesc}`);
+        continue;
+      }
+    }
+
+    // Execute action on real page
     const result = await executeOnPage(nextAction);
-    addLog(result?.result || nextAction.action, 'success');
-    previousActions.push(`Step ${steps}: ${nextAction.action} ${nextAction.target || ''}`);
+    const resultText = result?.result || `${nextAction.action} ${nextAction.target || ''}`;
+    addLog(`✅ ${resultText}`, 'success');
+    previousActions.push(`Step ${steps}: ${resultText}`);
 
-    // Wait for page to respond
+    // Wait for page to update
     await new Promise(r => setTimeout(r, 2000));
   }
 
@@ -551,21 +560,83 @@ function showScamWarning(payload) {
   addLog('⚠️ Scam detected — showing explanation', 'warning');
 }
 
-// Text to speech
+// ── Voice Setup ───────────────────────────────────────────────────
+let selectedVoice = null;
+
+function loadVoices() {
+  return new Promise((resolve) => {
+    let voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      selectedVoice = pickBestVoice(voices);
+      resolve(selectedVoice);
+      return;
+    }
+    // Voices not loaded yet — wait for event
+    window.speechSynthesis.onvoiceschanged = () => {
+      voices = window.speechSynthesis.getVoices();
+      selectedVoice = pickBestVoice(voices);
+      resolve(selectedVoice);
+    };
+  });
+}
+
+function pickBestVoice(voices) {
+  // Priority list — warm female English voices
+  const preferred = [
+    'Samantha',        // macOS/iOS warm female
+    'Karen',           // Australian female
+    'Moira',           // Irish female
+    'Tessa',           // South African female
+    'Veena',           // Indian female
+    'Microsoft Zira',  // Windows female
+    'Google US English', // Chrome female
+    'Microsoft Jenny', // Windows natural female
+  ];
+
+  for (const name of preferred) {
+    const match = voices.find(v => v.name.includes(name));
+    if (match) return match;
+  }
+
+  // Fallback: any en-US female voice
+  const enFemale = voices.find(v =>
+    v.lang.startsWith('en') &&
+    !v.name.toLowerCase().includes('male') &&
+    !v.name.includes('David') &&
+    !v.name.includes('Mark') &&
+    !v.name.includes('Richard') &&
+    !v.name.includes('George')
+  );
+  if (enFemale) return enFemale;
+
+  // Last resort: first English voice
+  return voices.find(v => v.lang.startsWith('en')) || voices[0];
+}
+
 function speakText(text) {
   window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.rate = 0.85;
-  utterance.pitch = 1.1;
-  const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v =>
-    v.name.includes('Samantha') || v.name.includes('Karen') ||
-    v.name.includes('Moira') || v.name.includes('Female') ||
-    (v.lang === 'en-US' && !v.name.includes('Male'))
-  );
-  if (preferred) utterance.voice = preferred;
+  utterance.rate = 0.82;
+  utterance.pitch = 1.15;
+  utterance.volume = 1;
+
+  if (selectedVoice) {
+    utterance.voice = selectedVoice;
+  } else {
+    // Try loading voices one more time
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) selectedVoice = pickBestVoice(voices);
+    if (selectedVoice) utterance.voice = selectedVoice;
+  }
+
   window.speechSynthesis.speak(utterance);
 }
+
+// Load voices immediately when popup opens
+loadVoices().then(voice => {
+  console.log('🎙 Selected voice:', voice?.name || 'default');
+});
 
 // Event listeners
 sendBtn.addEventListener('click', () => {
@@ -736,6 +807,75 @@ scamDetailsBtn.addEventListener('click', () => {
   }
 });
 
+loadVoices();
+
+// ── Spell Correction ──────────────────────────────────────────────
+function correctSpelling(text) {
+  const corrections = {
+    'tday': 'today', 'toady': 'today', 'todya': 'today',
+    'tmrw': 'tomorrow', 'tomrrow': 'tomorrow', 'tommorrow': 'tomorrow',
+    'serach': 'search', 'saerch': 'search',
+    'flgiht': 'flight', 'fligth': 'flight', 'flihgt': 'flight',
+    'chepaest': 'cheapest', 'cheapset': 'cheapest',
+    'resturant': 'restaurant', 'restaraunt': 'restaurant',
+    'adress': 'address', 'addres': 'address',
+    'recieve': 'receive', 'recive': 'receive',
+    'beleive': 'believe', 'beleif': 'belief',
+    'occured': 'occurred', 'occurance': 'occurrence',
+    'untill': 'until', 'wierd': 'weird',
+    'seperate': 'separate', 'definately': 'definitely',
+    'goverment': 'government', 'enviroment': 'environment',
+    'intresting': 'interesting', 'differnt': 'different',
+    'wether': 'whether', 'weaher': 'weather', 'wheather': 'weather',
+    'opne': 'open', 'clsoe': 'close', 'clsoed': 'closed',
+    'whta': 'what', 'waht': 'what', 'wha': 'what',
+    'hwo': 'how', 'hw': 'how',
+    'tiem': 'time', 'tiem': 'time',
+    'nearst': 'nearest', 'naerst': 'nearest',
+    'airprot': 'airport', 'ariport': 'airport',
+  };
+
+  let corrected = text;
+  const words = text.toLowerCase().split(' ');
+  const fixedWords = words.map(word => corrections[word] || word);
+  corrected = fixedWords.join(' ');
+  return corrected;
+}
+
+// ── Quick Answers ─────────────────────────────────────────────────
+async function getQuickAnswer(request) {
+  try {
+    const screenshotDataUrl = await takeScreenshot();
+    const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
+
+    const res = await fetch(`${API}/api/quick-answer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request, screenshot: base64 })
+    });
+    const data = await res.json();
+    return data.isQuickAnswer ? data : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── Quick Links Display ───────────────────────────────────────────
+function showQuickLinks(links) {
+  suggestionItems.innerHTML = '';
+  links.forEach(link => {
+    const btn = document.createElement('button');
+    btn.className = 'suggestion-btn';
+    btn.textContent = '🔗 ' + link.label;
+    btn.onclick = () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.update(tabs[0].id, { url: link.url });
+      });
+    };
+    suggestionItems.appendChild(btn);
+  });
+  suggestions.classList.remove('hidden');
+}
 // Init
 connectWS();
 chrome.runtime.onMessage.addListener((message) => {
