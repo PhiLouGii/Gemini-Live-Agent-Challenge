@@ -1,5 +1,9 @@
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+// Open side panel when extension icon is clicked
+chrome.action.onClicked.addListener((tab) => {
+  chrome.sidePanel.open({ tabId: tab.id });
+});
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'CAPTURE_SCREENSHOT') {
     chrome.tabs.captureVisibleTab(null, { format: 'png' }, (dataUrl) => {
       sendResponse({ screenshot: dataUrl });
@@ -7,7 +11,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  // Forward to popup
   if (message.type === 'SENSITIVE_PAGE_DETECTED' ||
       message.type === 'CONFUSION_DETECTED') {
     chrome.runtime.sendMessage({
