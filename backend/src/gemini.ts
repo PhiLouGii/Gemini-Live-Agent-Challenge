@@ -19,7 +19,7 @@ export async function askGemini(prompt: string): Promise<string> {
   return result.response.candidates![0].content.parts[0].text!;
 }
 
-// ── 2. Analyze screenshot + decide next action ────────────────────
+// ── 2. Get next action ────────────────────────────────────────────
 export async function getNextAction(
   base64Image: string,
   userRequest: string,
@@ -32,29 +32,37 @@ export async function getNextAction(
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are Grandma Mode, a warm helpful AI assistant controlling a browser for an elderly user.
+          text: `You are Grandma Mode, a helpful AI browser assistant.
 
 User request: "${userRequest}"
 Previous actions: ${previousActions.length > 0 ? previousActions.join(' → ') : 'none yet'}
 
 Look at the screenshot and decide the SINGLE next action to take.
 
-Respond ONLY with this exact JSON format:
+IMPORTANT RULES:
+- NEVER say you cannot do something
+- ALWAYS try to find a way forward
+- Break complex tasks into tiny single steps
+- If a page has a form, fill it step by step
+- If login is required, navigate to the relevant section instead
+- Be creative — if one approach fails, try another
+
+Respond ONLY with this exact JSON:
 {
   "action": "click" | "type" | "scroll" | "navigate" | "wait" | "done",
   "target": "visible text of element to interact with",
-  "value": "text to type or URL (if needed, otherwise null)",
-  "narration": "warm one-sentence explanation for elderly user",
+  "value": "text to type or URL if needed, otherwise null",
+  "narration": "friendly one-sentence explanation of what you are doing",
   "isDone": true or false
 }
 
 Rules:
-- "click": target = exact visible button/link text on screen
-- "type": target = placeholder text of input, value = what to type  
+- "click": target = exact visible button/link text
+- "type": target = placeholder text of input, value = what to type
 - "navigate": value = full URL
-- "done": task is fully complete
-- Narration must be warm, simple, like talking to a grandparent
-- ONLY return JSON, nothing else`
+- "done": ONLY when task is 100% complete
+- Keep narration friendly and clear
+- ONLY return JSON`
         }
       ]
     }]
@@ -82,7 +90,7 @@ export async function detectScam(
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are a scam detection expert protecting elderly internet users.
+          text: `You are a scam detection expert protecting internet users.
 
 Analyze this webpage screenshot for scam signals:
 - Urgent language ("Act now!", "You've won!", "Limited time!")
@@ -100,7 +108,7 @@ Respond ONLY with this exact JSON:
   "isScam": true or false,
   "reason": "brief technical one-line reason",
   "signals": ["signal 1", "signal 2", "signal 3"],
-  "warning": "warm gentle warning message for elderly user (if scam), or empty string if safe"
+  "warning": "clear warning message explaining exactly why this is suspicious (if scam), or empty string if safe"
 }`
         }
       ]
@@ -123,16 +131,16 @@ export async function simplifyPage(
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are Grandma Mode helping an elderly user understand a webpage.
+          text: `You are Grandma Mode, a helpful browser assistant.
 
 Look at this screenshot and explain what this page is about in simple, clear language.
 - Use short sentences
 - Avoid technical jargon
 - Mention the 2-3 most important things on the page
-- Be warm and reassuring
-- Keep it under 100 words
+- Be friendly and helpful
+- Keep it under 80 words
 
-Speak directly to the user as if you are their helpful grandchild.`
+Speak directly to the user.`
         }
       ]
     }]
@@ -141,6 +149,7 @@ Speak directly to the user as if you are their helpful grandchild.`
   return result.response.candidates![0].content.parts[0].text!;
 }
 
+// ── 5. Suggestions ────────────────────────────────────────────────
 export async function getSuggestions(base64Image: string): Promise<string[]> {
   const result = await model.generateContent({
     contents: [{
@@ -148,12 +157,12 @@ export async function getSuggestions(base64Image: string): Promise<string[]> {
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are Grandma Mode helping an elderly user browse the internet.
+          text: `You are Grandma Mode helping a user browse the internet.
 
-Look at this webpage and suggest 2-3 simple follow-up actions the user might want to do next.
+Look at this webpage and suggest 2-3 natural follow-up actions the user might want to do next.
 
-Respond ONLY with a JSON array of short, friendly action strings. Example:
-["Search for a cheaper option", "Read more about this topic", "Go back to the previous page"]
+Respond ONLY with a JSON array of short friendly action strings:
+["Search for a cheaper option", "Read more about this", "Go back to results"]
 
 Keep each suggestion under 8 words. Return ONLY the JSON array.`
         }
@@ -166,39 +175,40 @@ Keep each suggestion under 8 words. Return ONLY the JSON array.`
   return JSON.parse(cleaned);
 }
 
+// ── 6. Form simplifier ────────────────────────────────────────────
 export async function simplifyFormFields(
   fields: any[],
   base64Image: string
 ): Promise<any[]> {
+
   const result = await model.generateContent({
     contents: [{
       role: 'user',
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are Grandma Mode helping an elderly user fill out a form.
+          text: `You are Grandma Mode helping a user fill out a form.
 
-Here are the form fields found on the page:
+Here are the form fields:
 ${JSON.stringify(fields, null, 2)}
 
-For each field, provide a simplified explanation in plain English.
+For each field provide a simplified explanation in plain English.
 
-Respond ONLY with a JSON array like this:
+Respond ONLY with a JSON array:
 [
   {
     "id": "field id from input",
-    "simpleLabel": "Simple name for this field",
-    "explanation": "One warm sentence explaining what to put here",
-    "example": "An example value (optional, leave empty string if not helpful)",
+    "simpleLabel": "Simple clear name for this field",
+    "explanation": "One sentence explaining what to put here",
+    "example": "A practical example value",
     "required": true or false
   }
 ]
 
 Rules:
-- Use simple language an elderly person would understand
-- Be warm and reassuring
+- Use simple language anyone can understand
 - Keep explanations under 15 words
-- Give practical examples where helpful
+- Give practical examples
 - ONLY return the JSON array`
         }
       ]
@@ -210,6 +220,7 @@ Rules:
   return JSON.parse(cleaned);
 }
 
+// ── 7. Quick answers ──────────────────────────────────────────────
 export async function getQuickAnswer(
   request: string,
   base64Image: string
@@ -221,25 +232,28 @@ export async function getQuickAnswer(
       parts: [
         { inlineData: { mimeType: 'image/png', data: base64Image } },
         {
-          text: `You are Grandma Mode helping an elderly user.
+          text: `You are Grandma Mode helping a user.
 
 The user asked: "${request}"
 
-Decide if this is a QUICK ANSWER question (like "what time does KFC close", "nearest airport", "weather today", "who is the president") that can be answered directly WITHOUT navigating anywhere.
+Decide if this is a QUICK ANSWER question that can be answered directly from knowledge.
+Quick answer examples: opening hours, locations, prices, facts, weather, directions, contact info.
 
-If YES: answer it warmly and provide 2-3 helpful links.
-If NO: it needs browser navigation (like "buy a red dress", "book a flight").
+IMPORTANT RULES:
+- You have general knowledge about businesses, places, and facts worldwide
+- You do NOT need to visit a website to answer factual questions
+- For opening hours give typical/general hours confidently
+- Always provide 2-3 helpful relevant links
+- If it needs actual browsing (buying, booking, filling forms) set isQuickAnswer to false
 
 Respond ONLY with this JSON:
 {
   "isQuickAnswer": true or false,
-  "answer": "warm direct answer in 2 sentences max, or empty string if not quick answer",
+  "answer": "friendly confident answer in 2 sentences max, or empty string if not a quick answer",
   "links": [
     { "label": "short link label", "url": "https://full-url.com" }
   ]
 }
-
-For links use real working URLs like Google Maps, Google Search, official websites.
 ONLY return JSON.`
         }
       ]
