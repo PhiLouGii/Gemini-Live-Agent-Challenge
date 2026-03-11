@@ -854,7 +854,11 @@ async function getQuickAnswer(request) {
       body: JSON.stringify({ request, screenshot: base64 })
     });
     const data = await res.json();
-    return data.isQuickAnswer ? data : null;
+
+    if (data.isQuickAnswer && data.answer) {
+      return data;
+    }
+    return null;
   } catch {
     return null;
   }
@@ -862,18 +866,29 @@ async function getQuickAnswer(request) {
 
 // ── Quick Links Display ───────────────────────────────────────────
 function showQuickLinks(links) {
+  if (!links?.length) return;
+  
   suggestionItems.innerHTML = '';
+  
+  // Add a label
+  const label = document.createElement('div');
+  label.className = 'suggestions-title';
+  label.textContent = 'HELPFUL LINKS';
+  suggestionItems.appendChild(label);
+
   links.forEach(link => {
     const btn = document.createElement('button');
     btn.className = 'suggestion-btn';
-    btn.textContent = '🔗 ' + link.label;
+    btn.innerHTML = `🔗 ${link.label}`;
     btn.onclick = () => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.update(tabs[0].id, { url: link.url });
       });
+      addLog(`Opening: ${link.label}`, 'info');
     };
     suggestionItems.appendChild(btn);
   });
+
   suggestions.classList.remove('hidden');
 }
 // Init
