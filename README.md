@@ -184,7 +184,7 @@ grandma-mode/
 ## Tech Stack
 | Layer | Technology |
 |---|---|
-| AI | Gemini 2.0 Flash via Vertex AI |
+| AI | Gemini 2.0 Flash via Google GenAI SDK (@google/genai) |
 | Backend | Node.js + TypeScript + Express |
 | Deployment | Google Cloud Run |
 | Database | Google Firestore |
