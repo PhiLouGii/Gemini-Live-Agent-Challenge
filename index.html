@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grandma Mode - The Internet, Simplified</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --brown: #6b3a1f;
+        --brown-light: #a0622a;
+        --cream: #fdf6ec;
+        --warm: #f0e6d3;
+        --accent: #e8a045;
+        --text: #2c1810;
+        --muted: #8a6a55;
+      } 
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        font-family: 'DM Sans', sans-serif;
+        background: var (--cream);
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      /* ── NOISE TEXTURE ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 20px 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(253, 246, 236, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(107, 58, 31, 0.1);
+    }
+
+    .nav-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--brown);
+    }
+
+    .nav-logo span { font-size: 1.6rem; }
+
+    .nav-cta {
+      background: var(--brown);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 0.88rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      border: 2px solid var(--brown);
+    }
+
+    .nav-cta:hover {
+      background: transparent;
+      color: var(--brown);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 60px 80px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(232, 160, 69, 0.15) 0%, transparent 70%),
+                  radial-gradient(ellipse 40% 40% at 80% 80%, rgba(107, 58, 31, 0.08) 0%, transparent 60%);
+    }
+
+    .hero-content {
+      max-width: 900px;
+      text-align: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--warm);
+      border: 1px solid rgba(107, 58, 31, 0.2);
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-size: 0.82rem;
+      color: var(--brown);
+      margin-bottom: 32px;
+      animation: fadeUp 0.8s ease both;
+    }
+
+    .hero-badge-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3rem, 7vw, 5.5rem);
+      font-weight: 900;
+      line-height: 1.05;
+      color: var(--brown);
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s 0.1s ease both;
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--brown-light);
+      position: relative;
+    }
+
+    h1 em::after {
+      content: '';
+      position: absolute;
+      bottom: 4px; left: 0; right: 0;
+      height: 3px;
+      background: var(--accent);
+      border-radius: 2px;
+      transform: scaleX(0);
+      animation: underlineIn 0.6s 0.9s ease forwards;
+    }
+
+    @keyframes underlineIn {
+      to { transform: scaleX(1); }
+    }
+
+    .hero-sub {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--muted);
+      max-width: 600px;
+      margin: 0 auto 48px;
+      line-height: 1.7;
+      font-weight: 300;
+      animation: fadeUp 0.8s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s 0.3s ease both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--brown);
+      color: white;
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      transition: all 0.3s;
+      box-shadow: 0 8px 30px rgba(107, 58, 31, 0.3);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(107, 58, 31, 0.4);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      color: var(--brown);
+      padding: 16px 36px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1rem;
+      font-weight: 500;
+      border: 2px solid rgba(107, 58, 31, 0.3);
+      transition: all 0.3s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--brown);
+      background: var(--warm);
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── DEMO PREVIEW ── */
+    .preview {
+      padding: 0 60px 120px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .preview-window {
+      width: 100%;
+      max-width: 900px;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 40px 120px rgba(107, 58, 31, 0.15), 0 0 0 1px rgba(107,58,31,0.08);
+      overflow: hidden;
+      animation: fadeUp 1s 0.5s ease both;
+    }
+
+    .preview-bar {
+      background: var(--brown);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .preview-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .preview-dots span {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+    }
+
+    .preview-dots span:first-child { background: #ff5f57; }
+    .preview-dots span:nth-child(2) { background: #febc2e; }
+    .preview-dots span:nth-child(3) { background: #28c840; }
+
+    .preview-url {
+      flex: 1;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.8);
+    }
+
+    .preview-body {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      min-height: 360px;
+    }
+
+    .preview-site {
+      background: #f5f5f5;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .preview-skeleton {
+      background: #e0e0e0;
+      border-radius: 6px;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .preview-panel {
+      background: var(--cream);
+      border-left: 2px solid var(--warm);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .preview-grandma {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .preview-avatar {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: var(--warm);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .preview-bubble {
+      background: var(--warm);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.82rem;
+      color: var(--brown);
+      font-style: italic;
+      line-height: 1.5;
+    }
+
+    .preview-highlight {
+      background: rgba(232, 160, 69, 0.15);
+      border: 2px solid var(--accent);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      color: var(--brown-light);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .preview-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .preview-tag {
+      background: white;
+      border: 1.5px solid var(--warm);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    /* ── FEATURES ── */
+    .features {
+      padding: 120px 60px;
+      background: var(--brown);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .features::before {
+      content: '';
+      position: absolute;
+      top: -100px; right: -100px;
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: rgba(232, 160, 69, 0.08);
+    }
+
+    .features-header {
+      text-align: center;
+      margin-bottom: 80px;
+    }
+
+    .features-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: white;
+      margin-bottom: 16px;
+    }
+
+    .features-header p {
+      color: rgba(255,255,255,0.6);
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    .feature-card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      background: rgba(255,255,255,0.1);
+      transform: translateY(-4px);
+      border-color: rgba(232, 160, 69, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 2.2rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.2rem;
+      color: white;
+      margin-bottom: 10px;
+    }
+
+    .feature-card p {
+      font-size: 0.88rem;
+      color: rgba(255,255,255,0.55);
+      line-height: 1.6;
+    }
+
+    /* ── HOW IT WORKS ── */
+    .how {
+      padding: 120px 60px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    .how h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      color: var(--brown);
+      text-align: center;
+      margin-bottom: 80px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 48px;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 32px;
+      left: calc(16.66% + 16px);
+      right: calc(16.66% + 16px);
+      height: 2px;
+      background: linear-gradient(to right, var(--accent), var(--brown-light));
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--warm);
+      border: 3px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--brown);
+      margin: 0 auto 24px;
+      position: relative;
+      z-index: 1;
+      background: var(--cream);
+    }
+
+    .step h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--brown);
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      font-size: 0.88rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── INSTALL ── */
+    .install {
+      padding: 80px 60px 120px;
+      background: var(--warm);
+    }
+
+    .install-inner {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .install h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 2.8rem);
+      color: var(--brown);
+      margin-bottom: 16px;
+    }
+
+    .install-sub {
+      color: var(--muted);
+      margin-bottom: 48px;
+      font-size: 1rem;
+    }
+
+    .install-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .install-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      background: white;
+      border-radius: 16px;
+      padding: 20px 24px;
+      border: 1px solid rgba(107,58,31,0.1);
+    }
+
+    .install-step-num {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--brown);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.88rem;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .install-step-content h4 {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--brown);
+      margin-bottom: 4px;
+    }
+
+    .install-step-content p {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .install-step-content code {
+      background: var(--warm);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.82rem;
+      color: var(--brown);
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--brown);
+      color: white;
+      padding: 18px 40px;
+      border-radius: 50px;
+      text-decoration: none;
+      font-size: 1.05rem;
+      font-weight: 500;
+      box-shadow: 0 8px 30px rgba(107, 58, 31, 0.3);
+      transition: all 0.3s;
+      border: none;
+      cursor: pointer;
+    }
+
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(107, 58, 31, 0.4);
+    }
+
+    .download-note {
+      margin-top: 14px;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--brown);
+      color: rgba(255,255,255,0.5);
+      text-align: center;
+      padding: 32px;
+      font-size: 0.85rem;
+    }
+
+    footer strong { color: white; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      nav { padding: 16px 24px; }
+      .hero { padding: 100px 24px 60px; }
+      .preview { padding: 0 24px 80px; }
+      .preview-body { grid-template-columns: 1fr; }
+      .preview-panel { display: none; }
+      .features { padding: 80px 24px; }
+      .how { padding: 80px 24px; }
+      .steps { grid-template-columns: 1fr; }
+      .steps::before { display: none; }
+      .install { padding: 60px 24px 80px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+    <div class="nav-logo">
+        <span>👵</span> 
+        Grandma Mode
+    </div>
+    <a href="#install" class="nav-cta">Get Extension →</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Powered by Gemini AI · Built on Google Cloud
+    </div>
+    <h1>The internet,<br><em>simplified</em> for everyone.</h1>
+    <p class="hero-sub">
+      Grandma Mode is your personal AI web navigator. It watches your screen, understands any website, speaks instructions clearly, and gets things done — for you.
+    </p>
+    <div class="hero-actions">
+      <a href="#install" class="btn-primary">
+         Install Free Extension
+      </a>
+      <a href="#features" class="btn-secondary">
+        See how it works →
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- PREVIEW -->
+<section class="preview">
+  <div class="preview-window">
+    <div class="preview-bar">
+      <div class="preview-dots">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="preview-url">https://www.amazon.com</div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-site">
+        <div class="preview-skeleton" style="height:40px; width:60%;"></div>
+        <div class="preview-skeleton" style="height:200px;"></div>
+        <div class="preview-skeleton" style="height:20px; width:80%;"></div>
+        <div class="preview-skeleton" style="height:20px; width:50%;"></div>
+        <div class="preview-skeleton" style="height:44px; width:40%; background: #f0e6d3;"></div>
+      </div>
+      <div class="preview-panel">
+        <div style="font-size:0.7rem; text-transform:uppercase; letter-spacing:1px; color:#999; margin-bottom:4px;">Grandma Mode</div>
+        <div class="preview-grandma">
+          <div class="preview-avatar">🧓</div>
+          <div class="preview-bubble">"I found the item you wanted! The cheapest option is $24.99 with free delivery. Want me to add it to your cart?"</div>
+        </div>
+        <div class="preview-highlight">
+          ✨ Highlighting "Add to Cart" button
+        </div>
+        <div style="font-size:0.7rem; color:#999; text-transform:uppercase; letter-spacing:1px;">Suggestions</div>
+        <div class="preview-tags">
+          <div class="preview-tag">💬 Compare prices</div>
+          <div class="preview-tag">💬 Read reviews</div>
+          <div class="preview-tag">💬 Check delivery</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="features-header">
+    <h2>Everything you need to navigate the web</h2>
+    <p>One extension. Infinite possibilities. No technical knowledge required.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">👁️</span>
+      <h3>Sees Your Screen</h3>
+      <p>Uses Gemini Vision to understand any webpage — buttons, forms, layouts — just like a human would.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🤝</span>
+      <h3>Does Tasks For You</h3>
+      <p>Tell it what you want. It clicks, types, scrolls and navigates — completing tasks while you watch.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🛡️</span>
+      <h3>Scam Protection</h3>
+      <p>Detects suspicious pages, urgent language, and fake payment forms — and warns you before it's too late.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">✨</span>
+      <h3>Visual Highlighting</h3>
+      <p>Points directly at the element it's interacting with using a golden glow — so you always see exactly what's happening.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📝</span>
+      <h3>Form Guide</h3>
+      <p>Rewrites complex form labels in plain English, highlights required fields, and explains what each one means.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🧠</span>
+      <h3>Remembers You</h3>
+      <p>Learns your preferences over time — cheapest options, no subscriptions, free delivery — and applies them automatically.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🎙️</span>
+      <h3>Voice Powered</h3>
+      <p>Talk to it naturally. Grandma Mode listens, understands, and speaks back in a warm, clear voice.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🤔</span>
+      <h3>Confusion Detection</h3>
+      <p>Notices when you're lost — rapid scrolling, going back repeatedly — and proactively offers to help.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🐢</span>
+      <h3>Guided Mode</h3>
+      <p>Toggle step-by-step guidance with confirmations before every action — perfect for careful, deliberate browsing.</p>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <h2>How it works</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>Install the Extension</h3>
+      <p>Download and load Grandma Mode into Chrome or Edge in under 2 minutes.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>Browse Normally</h3>
+      <p>Go to any website you need help with. Click the Grandma Mode icon to open the side panel.</p>
+    </div>
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>Ask or Speak</h3>
+      <p>Type or speak what you need. Grandma Mode takes care of the rest — automatically.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INSTALL -->
+<section class="install" id="install">
+  <div class="install-inner">
+    <h2>Install Grandma Mode</h2>
+    <p class="install-sub">Free to use. Works on Chrome and Microsoft Edge. No account needed.</p>
+
+    <div class="install-steps">
+      <div class="install-step">
+        <div class="install-step-num">1</div>
+        <div class="install-step-content">
+          <h4>Download the extension</h4>
+          <p>Click the button below to download the Grandma Mode zip file.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">2</div>
+        <div class="install-step-content">
+          <h4>Unzip the file</h4>
+          <p>Right-click the downloaded file and select <code>Extract All</code> to unzip it.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">3</div>
+        <div class="install-step-content">
+          <h4>Open Extensions page</h4>
+          <p>In Chrome or Edge, go to <code>chrome://extensions</code> or <code>edge://extensions</code></p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">4</div>
+        <div class="install-step-content">
+          <h4>Enable Developer Mode</h4>
+          <p>Toggle on <code>Developer Mode</code> in the top right corner of the extensions page.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">5</div>
+        <div class="install-step-content">
+          <h4>Load the extension</h4>
+          <p>Click <code>Load Unpacked</code> and select the unzipped <code>grandma-mode</code> folder.</p>
+        </div>
+      </div>
+      <div class="install-step">
+        <div class="install-step-num">6</div>
+        <div class="install-step-content">
+          <h4>You're done!</h4>
+          <p>Click the Grandma Mode icon in your toolbar to open the side panel and start browsing smarter.</p>
+        </div>
+      </div>
+    </div>
+
+    <a href="grandma-mode.zip" download class="download-btn">
+    Download Grandma Mode
+    </a>
+    <p class="download-note">Compatible with Chrome 114+ and Microsoft Edge 114+</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <p>Built with ❤️ using <strong>Gemini AI</strong> and <strong>Google Cloud</strong> · <strong>Grandma Mode</strong> · Made for everyone</p>
+</footer>
+
+</body>
+</html>
