@@ -9,7 +9,7 @@ Built for the **GeminiLive Agent Challenge**.
 
 ## Live Demo
 - **Backend API:** https://grandma-mode-backend-243863724444.us-central1.run.app/health
-- **Landing Page:** 
+- **Landing Page:** https://grandma-mode.netlify.app/
 
 ---
 
