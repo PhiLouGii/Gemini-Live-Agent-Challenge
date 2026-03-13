@@ -1,4 +1,5 @@
-const API = 'http://localhost:3001';
+const API = 'https://grandma-mode-backend-243863724444.us-central1.run.app';
+const WS = 'wss://grandma-mode-backend-243863724444.us-central1.run.app';
 
 // UI Elements
 const speech = document.getElementById('speech');
