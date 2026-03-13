@@ -3,10 +3,17 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import { initBrowser, getScreenshot, navigateTo, closeBrowser } from './src/screenshot';
 import { getNextAction, detectScam, simplifyPage, getSuggestions, simplifyFormFields, getQuickAnswer } from './src/gemini';
 import { getUserMemory, savePreference, deletePreference, incrementTaskCount, extractAndSavePreferences } from './src/memory';
-import { executeAction } from './src/actions';
+
+// Only import browser functions when needed
+let browserFunctions: typeof import('./src/screenshot') | null = null;
+async function getBrowser() {
+  if (!browserFunctions) {
+    browserFunctions = await import('./src/screenshot');
+  }
+  return browserFunctions;
+}
 
 dotenv.config({ path: '../.env' });
 
@@ -35,12 +42,17 @@ wss.on('connection', (ws) => {
 
 // ── Health check ──────────────────────────────────────────────────
 app.get('/health', (req, res) => {
-  res.json({ status: 'Grandma Mode backend is alive!' });
+  res.json({ status: 'Grandma Mode backend is alive!', timestamp: new Date() });
+});
+
+app.get('/', (req, res) => {
+  res.json({ status: 'Grandma Mode backend is alive!', timestamp: new Date() });
 });
 
 // ── Start browser ─────────────────────────────────────────────────
 app.post('/api/start', async (req, res) => {
   try {
+    const { initBrowser } = await getBrowser();
     await initBrowser();
     res.json({ success: true });
   } catch (err: any) {
@@ -51,34 +63,26 @@ app.post('/api/start', async (req, res) => {
 // ── Run agent task ─────────────────────────────────────────────────
 app.post('/api/task', async (req, res) => {
   const { request, url } = req.body;
-
-  if (!request) {
-    return res.status(400).json({ error: 'request is required' });
-  }
+  if (!request) return res.status(400).json({ error: 'request is required' });
 
   res.json({ success: true, message: 'Task started' });
 
-  // Run agent in background, sending updates via WebSocket
   (async () => {
     try {
+      const { navigateTo, getScreenshot } = await getBrowser();
       if (url) await navigateTo(url);
 
       const previousActions: string[] = [];
       let isDone = false;
       let steps = 0;
-      const maxSteps = 15;
 
       sendToClient('status', { message: `Starting task: ${request}` });
 
-      while (!isDone && steps < maxSteps) {
+      while (!isDone && steps < 15) {
         steps++;
-
         const screenshot = await getScreenshot();
-
-        // Send screenshot to frontend
         sendToClient('screenshot', { image: screenshot });
 
-        // Check for scams on every step
         const scamCheck = await detectScam(screenshot);
         if (scamCheck.isScam) {
           sendToClient('scam', { warning: scamCheck.warning, reason: scamCheck.reason });
@@ -86,7 +90,6 @@ app.post('/api/task', async (req, res) => {
           break;
         }
 
-        // Get next action
         const { action, narration, isDone: done } = await getNextAction(
           screenshot, request, previousActions
         );
@@ -100,6 +103,7 @@ app.post('/api/task', async (req, res) => {
           break;
         }
 
+        const { executeAction } = await import('./src/actions');
         const result = await executeAction(action);
         previousActions.push(result);
         sendToClient('log', { text: result });
@@ -117,6 +121,7 @@ app.post('/api/task', async (req, res) => {
 // ── Scam check ────────────────────────────────────────────────────
 app.post('/api/scan', async (req, res) => {
   try {
+    const { getScreenshot } = await getBrowser();
     const screenshot = await getScreenshot();
     const result = await detectScam(screenshot);
     res.json(result);
@@ -128,6 +133,7 @@ app.post('/api/scan', async (req, res) => {
 // ── Simplify current page ─────────────────────────────────────────
 app.post('/api/simplify', async (req, res) => {
   try {
+    const { getScreenshot } = await getBrowser();
     const screenshot = await getScreenshot();
     const explanation = await simplifyPage(screenshot);
     res.json({ explanation });
@@ -140,6 +146,7 @@ app.post('/api/simplify', async (req, res) => {
 app.post('/api/navigate', async (req, res) => {
   const { url } = req.body;
   try {
+    const { navigateTo, getScreenshot } = await getBrowser();
     await navigateTo(url);
     const screenshot = await getScreenshot();
     res.json({ success: true, screenshot });
@@ -151,6 +158,7 @@ app.post('/api/navigate', async (req, res) => {
 // ── Get current screenshot ────────────────────────────────────────
 app.post('/api/screenshot', async (req, res) => {
   try {
+    const { getScreenshot } = await getBrowser();
     const screenshot = await getScreenshot();
     res.json({ screenshot });
   } catch (err: any) {
@@ -161,6 +169,7 @@ app.post('/api/screenshot', async (req, res) => {
 // ── Generate follow-up suggestions ───────────────────────────────
 app.post('/api/suggestions', async (req, res) => {
   try {
+    const { getScreenshot } = await getBrowser();
     const screenshot = await getScreenshot();
     const result = await getSuggestions(screenshot);
     res.json({ suggestions: result });
@@ -169,7 +178,7 @@ app.post('/api/suggestions', async (req, res) => {
   }
 });
 
-// Extension endpoints (screenshot comes FROM the extension)
+// ── Extension endpoints (screenshot comes FROM the extension) ─────
 app.post('/api/task-extension', async (req, res) => {
   const { request, screenshot } = req.body;
   if (!request || !screenshot) return res.status(400).json({ error: 'Missing fields' });
@@ -252,7 +261,7 @@ app.post('/api/suggestions-extension', async (req, res) => {
   }
 });
 
-// Next action for extension goal tasks
+// ── Next action for extension goal tasks ─────────────────────────
 app.post('/api/next-action', async (req, res) => {
   try {
     const { request, screenshot, previousActions } = req.body;
@@ -263,7 +272,7 @@ app.post('/api/next-action', async (req, res) => {
   }
 });
 
-// Simplify form fields
+// ── Simplify form fields ──────────────────────────────────────────
 app.post('/api/simplify-form', async (req, res) => {
   try {
     const { fields, screenshot } = req.body;
@@ -303,6 +312,7 @@ app.delete('/api/memory/preference/:key', async (req, res) => {
   }
 });
 
+// ── Quick answer ──────────────────────────────────────────────────
 app.post('/api/quick-answer', async (req, res) => {
   try {
     const { request, screenshot } = req.body;
@@ -315,6 +325,6 @@ app.post('/api/quick-answer', async (req, res) => {
 
 // ── Start server ──────────────────────────────────────────────────
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-  console.log(`🧓 Grandma Mode backend running on port ${PORT}`);
+server.listen(parseInt(PORT as string), '0.0.0.0', () => {
+  console.log(` Grandma Mode backend running on port ${PORT}`);
 });
