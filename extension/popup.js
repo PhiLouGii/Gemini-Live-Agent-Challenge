@@ -60,7 +60,7 @@ let ws = null;
 
 // Connect WebSocket
 function connectWS() {
-  ws = new WebSocket('ws://localhost:3001');
+  ws = new WebSocket(WS);
   ws.onopen = () => statusDot.classList.add('connected');
   ws.onclose = () => {
     statusDot.classList.remove('connected');
@@ -197,7 +197,7 @@ async function loadSuggestions() {
       data.suggestions.forEach(s => {
         const btn = document.createElement('button');
         btn.className = 'suggestion-btn';
-        btn.textContent = '💬 ' + s;
+        btn.textContent = s;
         btn.onclick = () => {
           // Actually run the suggestion as a real goal task
           suggestions.classList.add('hidden');
@@ -329,10 +329,10 @@ async function runGoalTask(goal) {
 function updateGuidedBanner() {
   if (isGuidedMode) {
     guidedBanner.className = 'guided-banner';
-    guidedBanner.textContent = '🐢 Guided Mode ON — I\'ll explain each step and ask before acting';
+    guidedBanner.textContent = 'Guided Mode ON — I\'ll confirm each step before acting';
   } else {
     guidedBanner.className = 'guided-banner off';
-    guidedBanner.textContent = '⚡ Guided Mode OFF — I\'ll complete tasks automatically';
+    guidedBanner.textContent = 'Guided Mode OFF — I\'ll complete tasks automatically';
   }
 }
 
@@ -880,7 +880,7 @@ function showQuickLinks(links) {
   links.forEach(link => {
     const btn = document.createElement('button');
     btn.className = 'suggestion-btn';
-    btn.innerHTML = `🔗 ${link.label}`;
+    btn.innerHTML = link.label;
     btn.onclick = () => {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         chrome.tabs.update(tabs[0].id, { url: link.url });
