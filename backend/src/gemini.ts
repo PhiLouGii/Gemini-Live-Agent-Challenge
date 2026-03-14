@@ -1,40 +1,34 @@
-import { GoogleGenAI } from '@google/genai';
+import { VertexAI } from '@google-cloud/vertexai';
 import { Action } from './actions';
 import dotenv from 'dotenv';
 
 dotenv.config({ path: '../.env' });
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+const vertexAI = new VertexAI({
+  project: process.env.GOOGLE_CLOUD_PROJECT!,
+  location: process.env.GOOGLE_CLOUD_LOCATION!,
+});
 
-const MODEL = 'gemini-2.0-flash';
+const MODEL = 'gemini-2.0-flash-001';
 
 async function generateWithImage(prompt: string, base64Image: string): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: [
-      {
-        role: 'user',
-        parts: [
-          {
-            inlineData: {
-              mimeType: 'image/png',
-              data: base64Image,
-            },
-          },
-          { text: prompt },
-        ],
-      },
-    ],
+  const model = vertexAI.getGenerativeModel({ model: MODEL });
+  const result = await model.generateContent({
+    contents: [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: 'image/png', data: base64Image } },
+        { text: prompt }
+      ]
+    }]
   });
-  return response.text ?? '';
+  return result.response.candidates![0].content.parts[0].text!;
 }
 
 async function generateText(prompt: string): Promise<string> {
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-  });
-  return response.text ?? '';
+  const model = vertexAI.getGenerativeModel({ model: MODEL });
+  const result = await model.generateContent(prompt);
+  return result.response.candidates![0].content.parts[0].text!;
 }
 
 // ── 1. Basic text prompt ──────────────────────────────────────────
