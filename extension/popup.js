@@ -168,22 +168,28 @@ async function explainPage() {
 
 // Scan for scams
 async function scanPage() {
-  addLog('Checking for scams...', 'pending');
-  const screenshotDataUrl = await takeScreenshot();
-  const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
-
-  const res = await fetch(`${API}/api/scan-extension`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ screenshot: base64 })
-  });
-  const data = await res.json();
-
-  if (data.isScam) {
-    showScamWarning(data.warning);
-  } else {
-    setSpeech("This page looks safe to me, dear! I don't see anything suspicious.");
-    speakText("This page looks safe to me, dear! I don't see anything suspicious.");
+  if (isRunning) return;
+  setRunning(true);
+  try {
+    addLog('Checking for scams...', 'pending');
+    const screenshotDataUrl = await takeScreenshot();
+    const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
+    const res = await fetch(`${API}/api/scan-extension`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ screenshot: base64 })
+    });
+    const data = await res.json();
+    if (data.isScam) {
+      showScamWarning(data);
+    } else {
+      setSpeech("This page looks safe! I don't see anything suspicious.");
+      speakText("This page looks safe!");
+    }
+  } catch(e) {
+    addLog('Could not reach backend', 'warning');
+  } finally {
+    setRunning(false);
   }
 }
 
@@ -902,6 +908,7 @@ function showQuickLinks(links) {
 }
 // Init
 connectWS();
+setRunning(false);
 chrome.runtime.onMessage.addListener((message) => {
   if (message.type === 'SENSITIVE_PAGE_DETECTED') {
     showSafetyWarning(message.payload);
