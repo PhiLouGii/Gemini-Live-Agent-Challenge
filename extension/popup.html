@@ -8,138 +8,136 @@
 </head>
 <body>
   <div class="header">
-  <img src="grandma-avatar.jpg" class="logo" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
-  <div>
-    <div class="title">Grandma Mode</div>
-    <div class="subtitle">Your gentle guide on the internet</div>
-  </div>
-  <div class="header-right">
-    <div class="guided-toggle">
-      <span class="guided-label">Guided</span>
-      <label class="toggle-switch">
-        <input type="checkbox" id="guidedToggle" checked>
-        <span class="toggle-slider"></span>
-      </label>
+    <img src="grandma-avatar.jpg" class="logo" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+    <div>
+      <div class="title">Grandma Mode</div>
+      <div class="subtitle">Your personal web navigator</div>
     </div>
-    <div class="status-dot" id="statusDot"></div>
+    <div class="header-right">
+      <div class="guided-toggle">
+        <span class="guided-label">Guided</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="guidedToggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="status-dot" id="statusDot"></div>
+    </div>
   </div>
-</div>
 
-<div class="guided-banner" id="guidedBanner">
-  🐢 Guided Mode ON — I'll explain each step and ask before acting
-</div>
+  <div class="guided-banner" id="guidedBanner">
+    Guided Mode ON — I'll confirm each step before acting
+  </div>
 
   <div class="grandma-box">
-    <div class="avatar" id="avatar"><img src="grandma-avatar.jpg" style="width:100%;height:100%;border-radius:50%;object-fit:cover;"></div>
+    <div class="avatar" id="avatar">
+      <img src="grandma-avatar.jpg" style="width:100%;height:100%;border-radius:50%;object-fit:cover;">
+    </div>
     <div class="speech" id="speech">
       Hi there! I'm Grandma Mode — your personal web navigator. Ask me anything or tell me what you'd like to do!
     </div>
   </div>
 
   <div class="scam-warning hidden" id="scamWarning">
-  <div class="scam-top">
-    <span>⚠️</span>
-    <div class="scam-title">Hold on, sweetheart!</div>
-    <button id="dismissScam">✕</button>
+    <div class="scam-top">
+      <span class="scam-icon">⚠</span>
+      <div class="scam-title">Warning — This page looks suspicious</div>
+      <button id="dismissScam">✕</button>
+    </div>
+    <div id="scamText" class="scam-message"></div>
+    <div class="scam-signals hidden" id="scamSignals">
+      <div class="scam-signals-title">Why I'm concerned:</div>
+      <ul id="scamSignalList"></ul>
+    </div>
+    <button class="scam-details-btn" id="scamDetailsBtn">Show details →</button>
   </div>
-  <div id="scamText" class="scam-message"></div>
-  <div class="scam-signals hidden" id="scamSignals">
-    <div class="scam-signals-title">🔍 Here's why I'm concerned:</div>
-    <ul id="scamSignalList"></ul>
-  </div>
-  <button class="scam-details-btn" id="scamDetailsBtn">
-    Show me why →
-  </button>
-</div>
 
   <div class="action-log" id="actionLog">
-    <div class="log-title">WHAT I'M DOING</div>
+    <div class="log-header">
+      <div class="log-title">ACTIVITY</div>
+      <button class="log-clear-btn" id="clearHistoryBtn">Clear</button>
+    </div>
     <div id="logItems">
       <div class="log-item info">Ready to help you!</div>
     </div>
   </div>
 
   <div class="task-button-area">
-  <button class="task-btn" id="taskBtn">🤝 Complete a Task for Me</button>
-</div>
+    <button class="task-btn" id="taskBtn">Complete a Task for Me</button>
+  </div>
 
-<div class="task-dialog hidden" id="taskDialog">
-  <div class="task-dialog-title">What would you like me to do?</div>
-  <textarea id="taskGoalInput" placeholder="e.g. Search for flights to Paris, Find me a red dress under $50..." rows="3"></textarea>
-  <div class="task-dialog-buttons">
-    <button class="task-cancel-btn" id="taskCancelBtn">Cancel</button>
-    <button class="task-confirm-btn" id="taskConfirmBtn">Let's do it! 🚀</button>
+  <div class="task-dialog hidden" id="taskDialog">
+    <div class="task-dialog-title">What would you like me to do?</div>
+    <textarea id="taskGoalInput" placeholder="e.g. Search for flights to Paris, Find me a red dress under $50..." rows="3"></textarea>
+    <div class="task-dialog-buttons">
+      <button class="task-cancel-btn" id="taskCancelBtn">Cancel</button>
+      <button class="task-confirm-btn" id="taskConfirmBtn">Let's go</button>
+    </div>
   </div>
-</div>
 
-<div class="confirm-dialog hidden" id="confirmDialog">
-  <div class="confirm-title">⚡ About to do this:</div>
-  <div class="confirm-action" id="confirmActionText"></div>
-  <div class="task-dialog-buttons">
-    <button class="task-cancel-btn" id="confirmNoBtn">Skip</button>
-    <button class="task-confirm-btn" id="confirmYesBtn">Yes, do it!</button>
+  <div class="confirm-dialog hidden" id="confirmDialog">
+    <div class="confirm-title">Next action:</div>
+    <div class="confirm-action" id="confirmActionText"></div>
+    <div class="task-dialog-buttons">
+      <button class="task-cancel-btn" id="confirmNoBtn">Skip</button>
+      <button class="task-confirm-btn" id="confirmYesBtn">Do it</button>
+    </div>
   </div>
-</div>
 
-<div class="safety-dialog hidden" id="safetyDialog">
-  <div class="safety-icon">🛡️</div>
-  <div class="safety-title">Hold on, sweetheart!</div>
-  <div class="safety-message" id="safetyMessage"></div>
-  <div class="safety-details" id="safetyDetails"></div>
-  <div class="safety-buttons">
-    <button class="safety-leave-btn" id="safetyLeaveBtn">⬅️ Take me back</button>
-    <button class="safety-proceed-btn" id="safetyProceedBtn">I understand, continue</button>
+  <div class="safety-dialog hidden" id="safetyDialog">
+    <div class="safety-icon">🛡</div>
+    <div class="safety-title">Heads up before you continue</div>
+    <div class="safety-message" id="safetyMessage"></div>
+    <div class="safety-details" id="safetyDetails"></div>
+    <div class="safety-buttons">
+      <button class="safety-leave-btn" id="safetyLeaveBtn">Take me back</button>
+      <button class="safety-proceed-btn" id="safetyProceedBtn">I understand, continue</button>
+    </div>
   </div>
-</div>
 
-<div class="form-panel hidden" id="formPanel">
-  <div class="form-panel-header">
-    <span>📝 Form Guide</span>
-    <button id="formCloseBtn">✕</button>
+  <div class="form-panel hidden" id="formPanel">
+    <div class="form-panel-header">
+      <span>Form Guide</span>
+      <button id="formCloseBtn">✕</button>
+    </div>
+    <div id="formFields"></div>
+    <div class="form-validate-area hidden" id="formValidateArea">
+      <button class="task-confirm-btn" id="formSubmitBtn">Looks good — Submit</button>
+    </div>
   </div>
-  <div id="formFields"></div>
-  <div class="form-validate-area hidden" id="formValidateArea">
-    <button class="task-confirm-btn" id="formSubmitBtn">
-      ✅ Looks good — Submit form
-    </button>
-  </div>
-</div>
 
-<div class="confusion-dialog hidden" id="confusionDialog">
-  <div class="confusion-icon">🤔</div>
-  <div class="confusion-title" id="confusionTitle">
-    Looks like you might be lost, dear!
+  <div class="confusion-dialog hidden" id="confusionDialog">
+    <div class="confusion-title" id="confusionTitle">Looks like you might be lost</div>
+    <div class="confusion-message" id="confusionMessage"></div>
+    <div class="task-dialog-buttons" style="justify-content:center; margin-top:10px;">
+      <button class="task-cancel-btn" id="confusionDismissBtn">I'm fine</button>
+      <button class="task-confirm-btn" id="confusionHelpBtn">Yes, help me</button>
+    </div>
   </div>
-  <div class="confusion-message" id="confusionMessage"></div>
-  <div class="task-dialog-buttons" style="justify-content:center; margin-top:10px;">
-    <button class="task-cancel-btn" id="confusionDismissBtn">I'm fine, thanks</button>
-    <button class="task-confirm-btn" id="confusionHelpBtn">Yes, help me!</button>
-  </div>
-</div>
 
-<div class="memory-panel hidden" id="memoryPanel">
-  <div class="memory-header">
-    <span>🧠 What I Know About You</span>
-    <button id="memoryCloseBtn">✕</button>
+  <div class="memory-panel hidden" id="memoryPanel">
+    <div class="memory-header">
+      <span>My Preferences</span>
+      <button id="memoryCloseBtn">✕</button>
+    </div>
+    <div id="memoryList">
+      <div class="memory-empty">No preferences saved yet</div>
+    </div>
+    <div class="memory-add">
+      <input type="text" id="memoryKeyInput" placeholder="Something to remember..." />
+      <button id="memorySaveBtn">Save</button>
+    </div>
+    <div class="memory-footer">
+      <span id="memoryTaskCount">Tasks completed: 0</span>
+    </div>
   </div>
-  <div id="memoryList">
-    <div class="memory-empty">I'm still learning about you, dear!</div>
-  </div>
-  <div class="memory-add">
-    <input type="text" id="memoryKeyInput" placeholder="What I should remember..." />
-    <button id="memorySaveBtn">Save</button>
-  </div>
-  <div class="memory-footer">
-    <span id="memoryTaskCount">Tasks completed: 0</span>
-  </div>
-</div>
 
-<div class="quick-buttons">
-  <button class="quick-btn" id="explainBtn">📖 Explain page</button>
-  <button class="quick-btn" id="scanBtn">🛡️ Check scams</button>
-  <button class="quick-btn" id="formBtn">📝 Simplify Form</button>
-  <button class="quick-btn" id="memoryBtn">🧠 My Preferences</button>
-</div>
+  <div class="quick-buttons">
+    <button class="quick-btn" id="explainBtn">Explain page</button>
+    <button class="quick-btn" id="scanBtn">Check scams</button>
+    <button class="quick-btn" id="formBtn">Form guide</button>
+    <button class="quick-btn" id="memoryBtn">Preferences</button>
+  </div>
 
   <div class="suggestions hidden" id="suggestions">
     <div class="suggestions-title">YOU MIGHT WANT TO...</div>
@@ -147,16 +145,16 @@
   </div>
 
   <div class="chat-area">
-    <textarea 
-      id="chatInput" 
-      placeholder="Type what you need help with..." 
+    <textarea
+      id="chatInput"
+      placeholder="Type what you need help with..."
       rows="2"
     ></textarea>
-    <button id="sendBtn">➤</button>
+    <button id="sendBtn">→</button>
   </div>
 
   <div class="voice-area">
-    <button class="voice-btn" id="voiceBtn">🎙️</button>
+    <button class="voice-btn" id="voiceBtn">🎙</button>
     <div class="voice-hint">Tap and speak your request</div>
   </div>
 
