@@ -143,19 +143,27 @@ async function executeOnPage(action) {
 
 // Explain current page
 async function explainPage() {
-  addLog('Analyzing page...', 'pending');
-  const screenshotDataUrl = await takeScreenshot();
-  const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
+  if (isRunning) return;
+  setRunning(true);
+  try {
+    addLog('Analyzing page...', 'pending');
+    const screenshotDataUrl = await takeScreenshot();
+    const base64 = screenshotDataUrl.replace(/^data:image\/png;base64,/, '');
 
-  const res = await fetch(`${API}/api/simplify-extension`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ screenshot: base64 })
-  });
-  const data = await res.json();
-  setSpeech(data.explanation);
-  speakText(data.explanation);
-  await loadSuggestions();
+    const res = await fetch(`${API}/api/simplify-extension`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ screenshot: base64 })
+    });
+    const data = await res.json();
+    setSpeech(data.explanation);
+    speakText(data.explanation);
+    await loadSuggestions();
+  } catch(e) {
+    addLog('Could not explain page', 'warning');
+  } finally {
+    setRunning(false);
+  }
 }
 
 // Scan for scams
