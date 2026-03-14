@@ -18,7 +18,7 @@ Built for the Gemini Live Agent Challenge, March 2026.
 ## Project Resources
 
 - [Text Description](docs/TEXT_DESCRIPTION.md) — features, technologies, learnings
-- [Architecture Diagram](docs/architecture-diagram.png) — system overview
+- [Architecture Diagram](docs/architecture-diagram.png.png) — system overview
 - [Demo Video](https://www.youtube.com/watch?v=hSGzJTH08CA) — 4 Mins Demo Video
 - [Extension Download](landing/grandma-mode.zip) — install directly in Chrome or Edge
 
