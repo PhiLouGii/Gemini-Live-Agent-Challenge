@@ -124,7 +124,7 @@ async function runTask(request) {
   // Spell correct first
   const corrected = correctSpelling(request);
   if (corrected !== request) {
-    addLog(`📝 Corrected: "${corrected}"`, 'info');
+    addLog(`Corrected: "${corrected}"`, 'info');
   }
 
   await runGoalTask(corrected);
@@ -237,7 +237,7 @@ async function runGoalTask(goal) {
 
   setSpeech(`Alright dear, let me help you with: "${goal}". Give me just a moment!`);
   speakText(`Alright dear, let me help you with that. Give me just a moment!`);
-  addLog(`🎯 Goal: ${goal}`, 'info');
+  addLog(`Goal: ${goal}`, 'info');
 
   // First check if this is a quick answer question
   const quickAnswer = await getQuickAnswer(goal);
