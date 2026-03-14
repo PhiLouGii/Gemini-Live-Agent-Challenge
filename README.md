@@ -19,7 +19,7 @@ Built for the Gemini Live Agent Challenge, March 2026.
 
 - [Text Description](docs/TEXT_DESCRIPTION.md) — features, technologies, learnings
 - [Architecture Diagram](docs/architecture-diagram.png) — system overview
-- [Demo Video](#) — add YouTube link here once uploaded
+- [Demo Video](https://www.youtube.com/watch?v=hSGzJTH08CA) — 4 Mins Demo Video
 - [Extension Download](landing/grandma-mode.zip) — install directly in Chrome or Edge
 
 ---
@@ -28,7 +28,7 @@ Built for the Gemini Live Agent Challenge, March 2026.
 
 | Feature | Description |
 |---|---|
-| Screen Understanding | Gemini Vision analyzes any webpage in real time |
+| Screen Understanding | Gemini Vision analyses any webpage in real time |
 | Task Automation | Tell it what you want — it clicks, types, scrolls and navigates |
 | Scam Detection | Detects suspicious pages, fake payment forms, urgent language |
 | Visual Highlighting | Golden glow shows exactly what element it is interacting with |
