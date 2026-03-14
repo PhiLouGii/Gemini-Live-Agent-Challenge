@@ -110,9 +110,17 @@ function handleWSMessage(msg) {
 
 // Take screenshot of current tab
 async function takeScreenshot() {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     chrome.runtime.sendMessage({ type: 'CAPTURE_SCREENSHOT' }, (response) => {
-      resolve(response.screenshot); // returns base64 data URL
+      if (chrome.runtime.lastError) {
+        reject(new Error(chrome.runtime.lastError.message));
+        return;
+      }
+      if (!response || !response.screenshot) {
+        reject(new Error('No screenshot returned'));
+        return;
+      }
+      resolve(response.screenshot);
     });
   });
 }
@@ -160,7 +168,8 @@ async function explainPage() {
     speakText(data.explanation);
     await loadSuggestions();
   } catch(e) {
-    addLog('Could not explain page', 'warning');
+    addLog(`Error: ${e.message}`, 'warning');
+    setSpeech('Something went wrong. Please try again.');
   } finally {
     setRunning(false);
   }
