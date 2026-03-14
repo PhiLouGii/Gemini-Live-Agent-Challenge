@@ -161,15 +161,16 @@ function findElement(target) {
 }
 
 function clickElement(target) {
-  // Highlight first, then click
   highlightElement(target);
   
   setTimeout(() => {
     const el = findElement(target);
     if (el) {
+      el.focus();
       el.click();
+      el.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }));
     }
-  }, 800); // slight delay so user sees highlight before click
+  }, 1000);
 
   return `Clicked "${target}"`;
 }
@@ -178,15 +179,32 @@ function typeInElement(target, value) {
   highlightElement(target);
 
   setTimeout(() => {
+    // Try multiple strategies to find the input
     let el = document.querySelector(`[placeholder*="${target}"]`);
-    if (!el) el = document.querySelector('input:not([type="hidden"]), textarea');
-    if (el) {
+    if (!el) el = document.querySelector(`input[name*="${target}"]`);
+    if (!el) el = document.querySelector(`textarea[placeholder*="${target}"]`);
+    if (!el) el = document.querySelector('input[type="text"]:not([type="hidden"])');
+    if (!el) el = document.querySelector('input[type="search"]');
+    if (!el) el = document.querySelector('textarea');
+    if (!el) el = document.activeElement;
+
+    if (el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA')) {
       el.focus();
-      el.value = value;
+      // Clear existing value
+      el.value = '';
       el.dispatchEvent(new Event('input', { bubbles: true }));
+      
+      // Type character by character for React/dynamic inputs
+      for (const char of value) {
+        el.value += char;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: char, bubbles: true }));
+        el.dispatchEvent(new KeyboardEvent('keyup', { key: char, bubbles: true }));
+      }
+      
       el.dispatchEvent(new Event('change', { bubbles: true }));
     }
-  }, 800);
+  }, 1000);
 
   return `Typed "${value}" into "${target}"`;
 }
