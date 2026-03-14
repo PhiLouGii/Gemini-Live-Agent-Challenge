@@ -519,10 +519,10 @@ function setSpeech(text) {
 }
 
 function addLog(text, type = 'info') {
-  const icons = { success: '✅', warning: '⚠️', pending: '⏳', info: '💬' };
+  const icons = { success: '✓', warning: '!', pending: '...', info: '' };
   const div = document.createElement('div');
   div.className = `log-item ${type}`;
-  div.textContent = (icons[type] || '') + ' ' + text;
+  div.textContent = icons[type] ? icons[type] + ' ' + text : text;
   logItems.appendChild(div);
   logItems.scrollTop = logItems.scrollHeight;
 }
@@ -677,7 +677,7 @@ voiceBtn.addEventListener('click', () => {
   const recognition = new SR();
   recognition.lang = 'en-US';
   voiceBtn.classList.add('listening');
-  voiceBtn.textContent = '⏹️';
+  voiceBtn.textContent = '■';
 
   recognition.onresult = (event) => {
     const transcript = event.results[0][0].transcript;
@@ -686,7 +686,7 @@ voiceBtn.addEventListener('click', () => {
   };
   recognition.onend = () => {
     voiceBtn.classList.remove('listening');
-    voiceBtn.textContent = '🎙️';
+    voiceBtn.textContent = '🎙';
   };
   recognition.start();
 });
